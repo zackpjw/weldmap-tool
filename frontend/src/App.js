@@ -30,6 +30,14 @@ function App() {
     flange_joint: { name: 'Flange Joint', shape: '⬢', color: '#0066FF', description: 'Hexagon - Flange joints' }
   };
 
+  // Load saved projects on component mount
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
+    setSavedProjects(saved);
+  }, []);
+
+  const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
