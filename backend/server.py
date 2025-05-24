@@ -167,10 +167,14 @@ async def export_pdf(project_data: dict):
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
                 
-                # Draw symbol based on type - enhanced dimensions and rotations
+                # Draw symbol based on type - 10% smaller for all except flange
+                base_size = 15
+                # Reduce size by 10% for all shapes except flange
+                symbol_size = base_size if symbol_type == 'flange_joint' else base_size * 0.9
+                
                 if symbol_type == 'field_weld':
-                    # Rotated square (45 degrees) - larger size
-                    size = 15
+                    # Rotated square (45 degrees) - smaller size
+                    size = symbol_size
                     # Draw diamond by creating a rotated square
                     points = [(x, y+size), (x+size, y), (x, y-size), (x-size, y)]
                     path = pdf_canvas.beginPath()
@@ -180,19 +184,21 @@ async def export_pdf(project_data: dict):
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                 elif symbol_type == 'shop_weld':
-                    # Circle - larger size
-                    pdf_canvas.circle(x, y, 15, stroke=1, fill=0)
+                    # Circle - smaller size
+                    pdf_canvas.circle(x, y, symbol_size, stroke=1, fill=0)
                 elif symbol_type == 'pipe_section':
-                    # Rounded rectangle - larger size, stretched horizontally by 12%
-                    width = 40 * 1.12  # 12% longer
-                    pdf_canvas.roundRect(x-width/2, y-8, width, 16, 8, stroke=1, fill=0)
+                    # Rounded rectangle - smaller size, stretched horizontally by 12%
+                    width = (symbol_size * 2.67) * 1.12  # Adjusted for smaller base size
+                    height = symbol_size * 1.07  # Adjusted height
+                    pdf_canvas.roundRect(x-width/2, y-height/2, width, height, 6, stroke=1, fill=0)
                 elif symbol_type == 'pipe_support':
-                    # Rectangle (not rounded) - larger size, stretched horizontally by 12%
-                    width = 40 * 1.12  # 12% longer
-                    pdf_canvas.rect(x-width/2, y-8, width, 16, stroke=1, fill=0)
+                    # Rectangle (not rounded) - smaller size, stretched horizontally by 12%
+                    width = (symbol_size * 2.67) * 1.12  # Adjusted for smaller base size
+                    height = symbol_size * 1.07  # Adjusted height
+                    pdf_canvas.rect(x-width/2, y-height/2, width, height, stroke=1, fill=0)
                 elif symbol_type == 'flange_joint':
-                    # Rotated hexagon (total 180 degrees) with horizontal center line - 10% larger
-                    size = 12 * 1.1  # 10% larger
+                    # Rotated hexagon (total 180 degrees) - keeps original size (10% larger)
+                    size = base_size * 1.1  # Flange keeps original larger size
                     hex_points = []
                     # Create hexagon points and rotate by 180 degrees
                     rotation = math.pi  # 180 degrees in radians
