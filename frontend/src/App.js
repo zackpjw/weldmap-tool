@@ -196,8 +196,14 @@ function App() {
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    
+    // Account for zoom and pan
+    const rawX = event.clientX - rect.left;
+    const rawY = event.clientY - rect.top;
+    
+    // Convert to canvas coordinates considering zoom and pan
+    const x = (rawX - panOffset.x) / zoomLevel;
+    const y = (rawY - panOffset.y) / zoomLevel;
 
     setPlacedSymbols(prev => 
       prev.map(symbol => 
@@ -206,7 +212,7 @@ function App() {
           : symbol
       )
     );
-  }, [draggedSymbol]);
+  }, [draggedSymbol, zoomLevel, panOffset]);
 
   const removeSymbol = (symbolId) => {
     setPlacedSymbols(prev => prev.filter(symbol => symbol.id !== symbolId));
