@@ -111,23 +111,16 @@ async def export_pdf(project_data: dict):
         # Create PDF buffer
         buffer = io.BytesIO()
         
-        # First, get the page size from the first image to determine orientation
+        # First, get the original dimensions from the first image to maintain exact size
         first_img_data = base64.b64decode(images[0])
         first_img = Image.open(io.BytesIO(first_img_data))
         img_width, img_height = first_img.size
         
-        # Determine page size based on image orientation
-        if img_width > img_height:
-            # Landscape orientation
-            from reportlab.lib.pagesizes import landscape, letter
-            page_size = landscape(letter)
-        else:
-            # Portrait orientation
-            from reportlab.lib.pagesizes import letter
-            page_size = letter
-            
-        pdf_canvas = canvas.Canvas(buffer, pagesize=page_size)
-        page_width, page_height = page_size
+        # Use original image dimensions for PDF to maintain exact size and quality
+        page_width = img_width * 0.75  # Convert pixels to points (96 DPI to 72 DPI)
+        page_height = img_height * 0.75
+        
+        pdf_canvas = canvas.Canvas(buffer, pagesize=(page_width, page_height))
         
         # Symbol colors mapping
         symbol_colors = {
