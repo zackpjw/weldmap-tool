@@ -515,7 +515,8 @@ function App() {
                       backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
                       backgroundSize: 'contain',
                       backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center'
+                      backgroundPosition: 'center',
+                      cursor: isDrawingMode ? 'crosshair' : 'pointer'
                     }}
                   />
                   
