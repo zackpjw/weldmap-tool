@@ -140,27 +140,13 @@ async def export_pdf(project_data: dict):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Resize image to fit page
-            img_ratio = img.width / img.height
-            page_ratio = page_width / page_height
-            
-            if img_ratio > page_ratio:
-                # Image is wider, fit to width
-                new_width = page_width
-                new_height = page_width / img_ratio
-            else:
-                # Image is taller, fit to height
-                new_height = page_height
-                new_width = page_height * img_ratio
-            
-            img = img.resize((int(new_width), int(new_height)), Image.Resampling.LANCZOS)
-            
+            # Maintain original image size and quality - draw at full resolution
             # Save as temporary file for PDF
             temp_file = f"/tmp/temp_img_{page_num}.png"
-            img.save(temp_file, "PNG")
+            img.save(temp_file, "PNG", quality=95, optimize=False)
             
-            # Draw background image
-            pdf_canvas.drawImage(temp_file, 0, 0, new_width, new_height)
+            # Draw background image at full size to maintain quality
+            pdf_canvas.drawImage(temp_file, 0, 0, page_width, page_height)
             
             # Clean up temp file
             try:
