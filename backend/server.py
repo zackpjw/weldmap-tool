@@ -618,32 +618,39 @@ def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[st
             
         analysis = analysis_data["analysis"]
         
-        # Rule 1: Field welds (diamond shape) - every 6 meters on pipes
-        if "pipes" in analysis:
-            for pipe in analysis["pipes"]:
-                if "start_coords" in pipe and "end_coords" in pipe:
-                    start = pipe["start_coords"]
-                    end = pipe["end_coords"]
-                    
-                    # Place field welds at start and end of each pipe
+        # New structure: Use weld_joints for precise positioning
+        if "weld_joints" in analysis:
+            for joint in analysis["weld_joints"]:
+                joint_type = joint.get("type", "unknown")
+                coords = joint.get("coords", [0, 0])
+                
+                if joint_type == "field_joint":
                     annotations.append({
                         "type": "field_weld",
                         "shape": "diamond",
-                        "coords": start,
-                        "pipe_id": pipe.get("id", "unknown"),
-                        "description": "Field weld - diamond shape"
+                        "coords": coords,
+                        "joint_id": joint.get("id", "unknown"),
+                        "description": joint.get("description", "Field weld - diamond shape")
                     })
-                    
+                elif joint_type == "shop_joint":
                     annotations.append({
-                        "type": "field_weld", 
-                        "shape": "diamond",
-                        "coords": end,
-                        "pipe_id": pipe.get("id", "unknown"),
-                        "description": "Field weld - diamond shape"
+                        "type": "shop_weld",
+                        "shape": "circle",
+                        "coords": coords,
+                        "joint_id": joint.get("id", "unknown"),
+                        "description": joint.get("description", "Shop weld - circular shape")
                     })
-                    
-                    # Add pipe section annotation between start and end
+        
+        # Add pipe section annotations using pipe centerlines
+        if "pipes" in analysis:
+            for pipe in analysis["pipes"]:
+                centerline = pipe.get("centerline_points", [])
+                if len(centerline) >= 2:
+                    # Add pipe section annotation at midpoint
+                    start = centerline[0]
+                    end = centerline[-1]
                     mid_coords = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+                    
                     annotations.append({
                         "type": "pipe_section",
                         "shape": "pill",
@@ -652,29 +659,70 @@ def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[st
                         "description": "Pipe section - pill shape"
                     })
         
-        # Rule 2: Shop joints (circular shape) - black dots between field joints
-        if "weld_points" in analysis:
-            for weld in analysis["weld_points"]:
-                if weld.get("type") == "shop_joint":
-                    annotations.append({
-                        "type": "shop_weld",
-                        "shape": "circle",
-                        "coords": weld["coords"],
-                        "weld_id": weld.get("id", "unknown"),
-                        "description": "Shop weld - circular shape"
-                    })
-        
-        # Rule 3: Rectangular boxes for pipe supports
+        # Add pipe support annotations using contact points
         if "supports" in analysis:
             for support in analysis["supports"]:
+                # Use pipe contact point for arrow targeting
+                contact_point = support.get("pipe_contact_point", support.get("attachment_coords", [0, 0]))
+                
                 annotations.append({
                     "type": "pipe_support",
-                    "shape": "rectangle", 
-                    "coords": support["coords"],
+                    "shape": "rectangle",
+                    "coords": contact_point,
                     "support_id": support.get("id", "unknown"),
-                    "label": support.get("label", ""),
+                    "label": support.get("label", "PS"),
                     "description": "Pipe support - rectangular shape"
                 })
+        
+        # Fallback: Handle legacy format if new structure not available
+        if not annotations:
+            # Legacy format support for backward compatibility
+            if "pipes" in analysis:
+                for pipe in analysis["pipes"]:
+                    if "start_coords" in pipe and "end_coords" in pipe:
+                        start = pipe["start_coords"]
+                        end = pipe["end_coords"]
+                        
+                        # Add field welds at pipe ends
+                        annotations.append({
+                            "type": "field_weld",
+                            "shape": "diamond",
+                            "coords": start,
+                            "pipe_id": pipe.get("id", "unknown"),
+                            "description": "Field weld - diamond shape"
+                        })
+                        
+                        annotations.append({
+                            "type": "field_weld", 
+                            "shape": "diamond",
+                            "coords": end,
+                            "pipe_id": pipe.get("id", "unknown"),
+                            "description": "Field weld - diamond shape"
+                        })
+            
+            # Legacy weld points
+            if "weld_points" in analysis:
+                for weld in analysis["weld_points"]:
+                    if weld.get("type") == "shop_joint":
+                        annotations.append({
+                            "type": "shop_weld",
+                            "shape": "circle",
+                            "coords": weld["coords"],
+                            "weld_id": weld.get("id", "unknown"),
+                            "description": "Shop weld - circular shape"
+                        })
+            
+            # Legacy supports
+            if "supports" in analysis:
+                for support in analysis["supports"]:
+                    annotations.append({
+                        "type": "pipe_support",
+                        "shape": "rectangle", 
+                        "coords": support.get("coords", [0, 0]),
+                        "support_id": support.get("id", "unknown"),
+                        "label": support.get("label", ""),
+                        "description": "Pipe support - rectangular shape"
+                    })
                 
     except Exception as e:
         print(f"Error generating weld map annotations: {e}")
