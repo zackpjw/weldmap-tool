@@ -172,10 +172,11 @@ async def export_pdf(project_data: dict):
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
                 
-                # Draw symbol based on type
+                # Draw symbol based on type - larger sizes, no fill, updated shapes
                 if symbol_type == 'field_weld':
-                    # Diamond
-                    size = 10
+                    # Rotated square (45 degrees) - larger size
+                    size = 15
+                    # Draw diamond by creating a rotated square
                     points = [(x, y+size), (x+size, y), (x, y-size), (x-size, y)]
                     path = pdf_canvas.beginPath()
                     path.moveTo(points[0][0], points[0][1])
@@ -184,20 +185,22 @@ async def export_pdf(project_data: dict):
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                 elif symbol_type == 'shop_weld':
-                    # Circle
-                    pdf_canvas.circle(x, y, 8, stroke=1, fill=0)
+                    # Circle - larger size
+                    pdf_canvas.circle(x, y, 15, stroke=1, fill=0)
                 elif symbol_type == 'pipe_section':
-                    # Pill shape (rounded rectangle)
-                    pdf_canvas.roundRect(x-12, y-5, 24, 10, 5, stroke=1, fill=0)
+                    # Rounded rectangle - larger size
+                    pdf_canvas.roundRect(x-20, y-8, 40, 16, 8, stroke=1, fill=0)
                 elif symbol_type == 'pipe_support':
-                    # Rectangle
-                    pdf_canvas.rect(x-10, y-6, 20, 12, stroke=1, fill=0)
+                    # Rectangle (not rounded) - larger size
+                    pdf_canvas.rect(x-20, y-8, 40, 16, stroke=1, fill=0)
                 elif symbol_type == 'flange_joint':
-                    # Hexagon
-                    size = 8
+                    # Rotated hexagon with center line - larger size
+                    size = 12
                     hex_points = []
+                    # Create hexagon points and rotate by 45 degrees
+                    rotation = math.pi / 4  # 45 degrees in radians
                     for i in range(6):
-                        angle = i * math.pi / 3
+                        angle = i * math.pi / 3 + rotation
                         px = x + size * math.cos(angle)
                         py = y + size * math.sin(angle)
                         hex_points.append((px, py))
@@ -210,8 +213,9 @@ async def export_pdf(project_data: dict):
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
-                    # Line through center
-                    pdf_canvas.line(x-size, y, x+size, y)
+                    # Line through center (adjusted for rotation)
+                    line_size = size * 0.8
+                    pdf_canvas.line(x-line_size, y-line_size, x+line_size, y+line_size)
             
             # Add new page if not the last page
             if page_num < len(images) - 1:
