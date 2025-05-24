@@ -38,26 +38,6 @@ function App() {
 
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
-  // Load saved projects on component mount
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
-    setSavedProjects(saved);
-  }, []);
-
-  // Load saved projects on component mount
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
-    setSavedProjects(saved);
-  }, []);
-
-  // Load saved projects on component mount
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
-    setSavedProjects(saved);
-  }, []);
-
-  const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
-
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
@@ -273,12 +253,6 @@ function App() {
     localStorage.setItem('weldMappingProjects', JSON.stringify(updated));
     setSavedProjects(updated);
   };
-
-  // Load saved projects on component mount
-  React.useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
-    setSavedProjects(saved);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -533,7 +507,7 @@ function App() {
                     ref={canvasRef}
                     width={800}
                     height={600}
-                    className="w-full h-auto cursor-crosshair"
+                    className="w-full h-auto"
                     onClick={handleCanvasClick}
                     onDragOver={handleCanvasDragOver}
                     onDrop={handleCanvasDrop}
