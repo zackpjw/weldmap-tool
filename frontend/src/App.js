@@ -16,12 +16,13 @@ function App() {
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Weld symbol types
+  // Weld symbol types with updated colors
   const symbolTypes = {
-    field_weld: { name: 'Field Weld', shape: '♦', color: '#FF4444', description: 'Diamond - Field welds' },
-    shop_weld: { name: 'Shop Weld', shape: '●', color: '#44CCCC', description: 'Circle - Shop welds' },
-    pipe_section: { name: 'Pipe Section', shape: '⬭', color: '#4488FF', description: 'Pill - Pipe sections' },
-    pipe_support: { name: 'Pipe Support', shape: '■', color: '#44CC44', description: 'Rectangle - Pipe supports' }
+    field_weld: { name: 'Field Weld', shape: '♦', color: '#0066FF', description: 'Diamond - Field welds' },
+    shop_weld: { name: 'Shop Weld', shape: '●', color: '#0066FF', description: 'Circle - Shop welds' },
+    pipe_section: { name: 'Pipe Section', shape: '⬭', color: '#0066FF', description: 'Pill - Pipe sections' },
+    pipe_support: { name: 'Pipe Support', shape: '■', color: '#FF0000', description: 'Rectangle - Pipe supports' },
+    flange_joint: { name: 'Flange Joint', shape: '⬢', color: '#0066FF', description: 'Hexagon - Flange joints' }
   };
 
   const handleFileSelect = (event) => {
