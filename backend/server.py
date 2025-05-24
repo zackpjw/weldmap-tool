@@ -59,7 +59,7 @@ def pdf_to_images(pdf_path: str) -> List[str]:
         doc.close()
         return images
     except Exception as e:
-        raise HTTPException(status_code=500, f"Error converting PDF to images: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error converting PDF to images: {str(e)}")
 
 async def analyze_drawing_with_ai(image_base64: str, page_num: int) -> Dict[str, Any]:
     """Analyze engineering drawing using OpenAI Vision API"""
