@@ -171,6 +171,87 @@ function App() {
     }
   };
 
+  const exportToPDF = async () => {
+    if (pdfImages.length === 0) return;
+
+    try {
+      const projectData = {
+        filename: selectedFile?.name || 'weld_mapping_project',
+        pages: pdfImages.length,
+        symbols: placedSymbols,
+        images: pdfImages
+      };
+
+      const response = await fetch(`${API_BASE_URL}/api/export-pdf`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(projectData),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${projectData.filename}_annotated.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      } else {
+        throw new Error('Export failed');
+      }
+    } catch (err) {
+      setError('Error exporting to PDF');
+    }
+  };
+
+  const saveProject = () => {
+    if (!projectName.trim()) {
+      setError('Please enter a project name');
+      return;
+    }
+
+    const project = {
+      id: Date.now(),
+      name: projectName.trim(),
+      createdAt: new Date().toISOString(),
+      filename: selectedFile?.name || 'unknown',
+      symbols: placedSymbols,
+      images: pdfImages,
+      currentPage: currentPage
+    };
+
+    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
+    saved.push(project);
+    localStorage.setItem('weldMappingProjects', JSON.stringify(saved));
+    
+    setSavedProjects(saved);
+    setShowSaveDialog(false);
+    setProjectName('');
+  };
+
+  const loadProject = (project) => {
+    setPlacedSymbols(project.symbols || []);
+    setPdfImages(project.images || []);
+    setCurrentPage(project.currentPage || 0);
+    setSelectedFile({ name: project.filename });
+    setShowLoadDialog(false);
+  };
+
+  const deleteProject = (projectId) => {
+    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
+    const updated = saved.filter(p => p.id !== projectId);
+    localStorage.setItem('weldMappingProjects', JSON.stringify(updated));
+    setSavedProjects(updated);
+  };
+
+  // Load saved projects on component mount
+  React.useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
+    setSavedProjects(saved);
+  }, []);
+
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
   return (
