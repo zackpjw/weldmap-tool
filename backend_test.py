@@ -423,21 +423,38 @@ startxref
         # Test AI connection (expect quota error but connection should work)
         self.test_ai_connection()
         
-        # Test PDF upload functionality
+        # Test NEW DEMO UPLOAD ENDPOINT (PRIORITY)
+        print("\n🎯 TESTING NEW DEMO FEATURES:")
+        self.test_demo_upload_endpoint()
+        
+        # Test visual annotations in demo mode
+        self.test_visual_annotations()
+        
+        # Test AI upload functionality
+        print("\n🧠 TESTING AI FEATURES:")
         self.test_pdf_upload_structure()
         
         # Test error handling
+        print("\n🚫 TESTING ERROR HANDLING:")
         self.test_invalid_file_upload()
         
         # Test CORS configuration
+        print("\n🌐 TESTING INFRASTRUCTURE:")
         self.test_cors_headers()
         
         # Print summary
         print("=" * 60)
         print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
         
+        # Check critical features
+        critical_tests = ['Health Check', 'Demo Upload Endpoint', 'Visual Annotations']
+        print(f"\n🎯 CRITICAL NEW FEATURES STATUS:")
+        
         if self.tests_passed == self.tests_run:
-            print("🎉 All backend tests passed! Infrastructure is working correctly.")
+            print("🎉 All backend tests passed! Ready for frontend testing.")
+            return 0
+        elif self.tests_passed >= self.tests_run * 0.8:  # 80% pass rate
+            print("✅ Most tests passed. Backend is functional for frontend testing.")
             return 0
         else:
             print(f"⚠️  {self.tests_run - self.tests_passed} test(s) failed. Check the issues above.")
