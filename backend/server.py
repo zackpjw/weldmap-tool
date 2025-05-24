@@ -212,11 +212,11 @@ async def export_pdf(project_data: dict):
                     width = 40 * 1.12  # 12% longer
                     pdf_canvas.rect(x-width/2, y-8, width, 16, stroke=1, fill=0)
                 elif symbol_type == 'flange_joint':
-                    # Rotated hexagon (total 90 degrees) with horizontal center line - 10% larger
+                    # Rotated hexagon (total 180 degrees) with horizontal center line - 10% larger
                     size = 12 * 1.1  # 10% larger
                     hex_points = []
-                    # Create hexagon points and rotate by 90 degrees (45 + 45)
-                    rotation = math.pi / 2  # 90 degrees in radians
+                    # Create hexagon points and rotate by 180 degrees
+                    rotation = math.pi  # 180 degrees in radians
                     for i in range(6):
                         angle = i * math.pi / 3 + rotation
                         px = x + size * math.cos(angle)
@@ -231,7 +231,7 @@ async def export_pdf(project_data: dict):
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
-                    # Horizontal line through center (adjusted for 90-degree rotation)
+                    # Horizontal line through center
                     line_size = size * 0.8
                     pdf_canvas.line(x-line_size, y, x+line_size, y)
             
