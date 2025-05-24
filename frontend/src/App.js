@@ -25,14 +25,58 @@ function App() {
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Weld symbol types with updated colors
+  // Weld symbol types with updated shapes and descriptions
   const symbolTypes = {
-    field_weld: { name: 'Field Weld', shape: '♦', color: '#0066FF', description: 'Diamond - Field welds' },
+    field_weld: { name: 'Field Weld', shape: '⧫', color: '#0066FF', description: 'Rotated Square - Field welds' },
     shop_weld: { name: 'Shop Weld', shape: '●', color: '#0066FF', description: 'Circle - Shop welds' },
-    pipe_section: { name: 'Pipe Section', shape: '⬭', color: '#0066FF', description: 'Pill - Pipe sections' },
-    pipe_support: { name: 'Pipe Support', shape: '■', color: '#FF0000', description: 'Rectangle - Pipe supports' },
-    flange_joint: { name: 'Flange Joint', shape: '⬢', color: '#0066FF', description: 'Hexagon - Flange joints' }
+    pipe_section: { name: 'Pipe Section', shape: '▬', color: '#0066FF', description: 'Rounded Rectangle - Pipe sections' },
+    pipe_support: { name: 'Pipe Support', shape: '▬', color: '#FF0000', description: 'Rectangle - Pipe supports' },
+    flange_joint: { name: 'Flange Joint', shape: '⬢', color: '#0066FF', description: 'Rotated Hexagon - Flange joints' }
   };
+
+  // Zoom functionality
+  const zoomIn = () => {
+    setZoomLevel(prev => Math.min(prev * 1.5, 5)); // Max zoom 5x
+  };
+
+  const zoomOut = () => {
+    setZoomLevel(prev => Math.max(prev / 1.5, 0.2)); // Min zoom 0.2x
+  };
+
+  const resetZoom = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleWheel = useCallback((event) => {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? 0.9 : 1.1;
+    setZoomLevel(prev => Math.min(Math.max(prev * delta, 0.2), 5));
+  }, []);
+
+  const handleMouseDown = useCallback((event) => {
+    if (event.button === 1 || (event.button === 0 && event.ctrlKey)) { // Middle mouse or Ctrl+left
+      setIsPanning(true);
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+      event.preventDefault();
+    }
+  }, []);
+
+  const handleMouseMove = useCallback((event) => {
+    if (isPanning) {
+      const deltaX = event.clientX - lastPanPoint.x;
+      const deltaY = event.clientY - lastPanPoint.y;
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      setLastPanPoint({ x: event.clientX, y: event.clientY });
+    }
+  }, [isPanning, lastPanPoint]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
 
   // Load saved projects on component mount
   useEffect(() => {
