@@ -771,7 +771,7 @@ function App() {
                         onDoubleClick={() => removeSymbol(symbol.id)}
                         title={`${symbolTypes[symbol.type].name} - Double-click to remove`}
                       >
-                        {renderSymbol(symbol.type)}
+                        {renderSymbol(symbol.type, selectedSymbolId === symbol.id)}
                       </div>
                     );
                   })}
