@@ -629,7 +629,9 @@ function App() {
                   {currentPageSymbols.map((symbol) => {
                     // Create custom SVG symbols for proper shapes and sizes
                     const renderSymbol = (type, isSelected = false) => {
-                      const size = 25; // Base size
+                      const baseSize = 25; // Base size
+                      // Reduce size by 10% for all shapes except flange
+                      const size = type === 'flange_joint' ? baseSize : baseSize * 0.9;
                       const strokeWidth = 3;
                       const color = symbolTypes[type].color;
                       
