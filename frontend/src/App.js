@@ -786,9 +786,16 @@ function App() {
                       <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
                     </p>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    💡 Tip: Use mouse wheel to zoom, Ctrl+click to pan, or use the zoom controls above
-                  </p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-gray-500">
+                      💡 Tip: Use mouse wheel to zoom, Ctrl+click to pan, or use the zoom controls above
+                    </p>
+                    {selectedSymbolId && (
+                      <p className="text-xs text-blue-600 font-medium">
+                        ✨ Symbol selected - Press Delete/Backspace to remove, Esc to deselect
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
