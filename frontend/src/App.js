@@ -751,10 +751,11 @@ function App() {
                         key={symbol.id}
                         className="absolute cursor-move hover:scale-110 transition-transform"
                         style={{
-                          left: symbol.x * zoomLevel + panOffset.x - 25,
-                          top: symbol.y * zoomLevel + panOffset.y - 25,
+                          left: (symbol.x * zoomLevel + panOffset.x) - 25,
+                          top: (symbol.y * zoomLevel + panOffset.y) - 25,
                           zIndex: 10,
-                          pointerEvents: 'auto'
+                          pointerEvents: 'auto',
+                          transform: `scale(${zoomLevel})`
                         }}
                         draggable
                         onDragStart={(e) => handleSymbolDragStart(e, symbol.id)}
