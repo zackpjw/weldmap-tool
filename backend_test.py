@@ -21,183 +21,360 @@ class WeldMappingAPITester:
         self.test_images = []
         self.test_filename = ""
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
-        """Run a single API test"""
-        url = f"{self.base_url}/{endpoint}"
-        headers = {}
-        
+    def log_test(self, name, success, details=""):
+        """Log test results"""
         self.tests_run += 1
-        print(f"\n🔍 Testing {name}...")
-        print(f"   URL: {url}")
-        
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=30)
-            elif method == 'POST':
-                if files:
-                    response = requests.post(url, files=files, timeout=60)
-                else:
-                    headers['Content-Type'] = 'application/json'
-                    response = requests.post(url, json=data, headers=headers, timeout=30)
-
-            success = response.status_code == expected_status
-            if success:
-                self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
-                try:
-                    response_data = response.json()
-                    print(f"   Response keys: {list(response_data.keys()) if isinstance(response_data, dict) else 'Non-dict response'}")
-                except:
-                    print(f"   Response: {response.text[:200]}...")
-            else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
-                print(f"   Response: {response.text[:500]}...")
-
-            return success, response.json() if success and response.content else {}
-
-        except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
-            return False, {}
+        if success:
+            self.tests_passed += 1
+            print(f"✅ {name} - PASSED {details}")
+        else:
+            print(f"❌ {name} - FAILED {details}")
+        return success
 
     def create_test_pdf(self):
         """Create a simple test PDF for upload testing"""
         try:
-            # Create a simple PDF-like content (this is a mock - in real scenario we'd use a proper PDF)
-            # For testing purposes, we'll create a small binary file that mimics a PDF
-            pdf_content = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n>>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000074 00000 n \n0000000120 00000 n \ntrailer\n<<\n/Size 4\n/Root 1 0 R\n>>\nstartxref\n179\n%%EOF"
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+            
+            buffer = io.BytesIO()
+            pdf_canvas = canvas.Canvas(buffer, pagesize=letter)
+            pdf_canvas.drawString(100, 750, "Test Weld Mapping Drawing")
+            pdf_canvas.drawString(100, 700, "This is a test PDF for symbol placement")
+            pdf_canvas.line(100, 650, 500, 650)  # Simple line drawing
+            pdf_canvas.save()
+            buffer.seek(0)
+            return buffer.getvalue()
+        except ImportError:
+            # Fallback: create minimal PDF content
+            pdf_content = b"""%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+100 700 Td
+(Test PDF) Tj
+ET
+endstream
+endobj
+
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000206 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+300
+%%EOF"""
             return pdf_content
-        except Exception as e:
-            print(f"Error creating test PDF: {e}")
-            return None
 
     def test_health_check(self):
-        """Test health check endpoint"""
-        success, response = self.run_test(
-            "Health Check",
-            "GET",
-            "api/health",
-            200
-        )
-        if success:
-            expected_keys = ['status', 'service']
-            for key in expected_keys:
-                if key not in response:
-                    print(f"⚠️  Warning: Missing expected key '{key}' in health response")
-        return success
-
-    def test_pdf_upload_invalid_file(self):
-        """Test PDF upload with invalid file type"""
-        # Create a text file instead of PDF
-        text_content = b"This is not a PDF file"
-        files = {'file': ('test.txt', io.BytesIO(text_content), 'text/plain')}
-        
-        success, response = self.run_test(
-            "PDF Upload - Invalid File Type",
-            "POST",
-            "api/upload-pdf-only",
-            400,
-            files=files
-        )
-        return success
-
-    def test_pdf_upload_no_file(self):
-        """Test PDF upload without file"""
-        success, response = self.run_test(
-            "PDF Upload - No File",
-            "POST",
-            "api/upload-pdf-only",
-            422  # FastAPI validation error
-        )
-        return success
-
-    def test_pdf_upload_valid_file(self):
-        """Test PDF upload with valid PDF file"""
-        pdf_content = self.create_test_pdf()
-        if not pdf_content:
-            print("❌ Could not create test PDF")
-            return False
+        """Test the health check endpoint"""
+        try:
+            response = self.session.get(f"{self.base_url}/api/health", timeout=10)
+            success = response.status_code == 200
             
-        files = {'file': ('test_drawing.pdf', io.BytesIO(pdf_content), 'application/pdf')}
-        
-        success, response = self.run_test(
-            "PDF Upload - Valid PDF",
-            "POST",
-            "api/upload-pdf-only",
-            200,
-            files=files
-        )
-        
-        if success:
-            # Validate response structure
-            expected_keys = ['success', 'file_id', 'filename', 'total_pages', 'images', 'message']
-            for key in expected_keys:
-                if key not in response:
-                    print(f"⚠️  Warning: Missing expected key '{key}' in upload response")
-                    return False
+            if success:
+                data = response.json()
+                expected_keys = ["status", "service"]
+                has_keys = all(key in data for key in expected_keys)
+                success = has_keys and data.get("status") == "healthy"
+                details = f"- Status: {data.get('status')}, Service: {data.get('service')}"
+            else:
+                details = f"- Status Code: {response.status_code}"
+                
+            return self.log_test("Health Check", success, details)
             
-            # Validate response values
-            if response.get('success') != True:
-                print("⚠️  Warning: Success flag is not True")
-                return False
-                
-            if not response.get('file_id'):
-                print("⚠️  Warning: No file_id in response")
-                return False
-                
-            if response.get('filename') != 'test_drawing.pdf':
-                print("⚠️  Warning: Filename mismatch")
-                
-            if not isinstance(response.get('images'), list):
-                print("⚠️  Warning: Images is not a list")
-                return False
-                
-            print(f"   ✅ PDF processed successfully: {response.get('total_pages')} pages")
-            print(f"   ✅ File ID: {response.get('file_id')}")
-            print(f"   ✅ Images count: {len(response.get('images', []))}")
+        except Exception as e:
+            return self.log_test("Health Check", False, f"- Error: {str(e)}")
+
+    def test_pdf_upload(self):
+        """Test PDF upload and conversion to images"""
+        try:
+            # Create test PDF
+            pdf_content = self.create_test_pdf()
             
-            return True
-        
-        return success
+            # Prepare multipart form data
+            files = {
+                'file': ('test_drawing.pdf', pdf_content, 'application/pdf')
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/upload-pdf-only",
+                files=files,
+                timeout=30
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                required_keys = ["success", "file_id", "filename", "total_pages", "images"]
+                has_keys = all(key in data for key in required_keys)
+                
+                if has_keys:
+                    success = (
+                        data.get("success") == True and
+                        data.get("total_pages") > 0 and
+                        len(data.get("images", [])) > 0
+                    )
+                    details = f"- Pages: {data.get('total_pages')}, Images: {len(data.get('images', []))}"
+                    
+                    # Store for later tests
+                    self.test_images = data.get("images", [])
+                    self.test_filename = data.get("filename", "test_drawing.pdf")
+                else:
+                    success = False
+                    details = f"- Missing required keys: {[k for k in required_keys if k not in data]}"
+            else:
+                details = f"- Status Code: {response.status_code}, Response: {response.text[:200]}"
+                
+            return self.log_test("PDF Upload", success, details)
+            
+        except Exception as e:
+            return self.log_test("PDF Upload", False, f"- Error: {str(e)}")
+
+    def test_pdf_export(self):
+        """Test NEW PDF export with symbols functionality"""
+        try:
+            # Need images from upload test
+            if not self.test_images:
+                return self.log_test("PDF Export", False, "- No test images available (upload test must pass first)")
+            
+            # Create test project data with all 5 symbol types
+            test_symbols = [
+                {
+                    "id": 1,
+                    "type": "field_weld",
+                    "x": 100,
+                    "y": 100,
+                    "page": 0
+                },
+                {
+                    "id": 2,
+                    "type": "shop_weld",
+                    "x": 200,
+                    "y": 150,
+                    "page": 0
+                },
+                {
+                    "id": 3,
+                    "type": "pipe_section",
+                    "x": 300,
+                    "y": 200,
+                    "page": 0
+                },
+                {
+                    "id": 4,
+                    "type": "pipe_support",
+                    "x": 400,
+                    "y": 250,
+                    "page": 0
+                },
+                {
+                    "id": 5,
+                    "type": "flange_joint",
+                    "x": 500,
+                    "y": 300,
+                    "page": 0
+                }
+            ]
+            
+            project_data = {
+                "filename": "test_weld_mapping",
+                "symbols": test_symbols,
+                "images": self.test_images
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/export-pdf",
+                json=project_data,
+                timeout=30
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                # Check if response is PDF
+                content_type = response.headers.get('content-type', '')
+                is_pdf = 'application/pdf' in content_type
+                
+                if is_pdf:
+                    pdf_size = len(response.content)
+                    details = f"- PDF generated successfully, Size: {pdf_size} bytes, Symbols: {len(test_symbols)}"
+                    success = pdf_size > 1000  # Reasonable PDF size check
+                else:
+                    success = False
+                    details = f"- Wrong content type: {content_type}"
+            else:
+                details = f"- Status Code: {response.status_code}, Response: {response.text[:200]}"
+                
+            return self.log_test("PDF Export with Symbols", success, details)
+            
+        except Exception as e:
+            return self.log_test("PDF Export with Symbols", False, f"- Error: {str(e)}")
 
     def test_export_annotations(self):
-        """Test export annotations endpoint"""
-        test_annotations = {
-            "symbols": [
-                {"id": 1, "type": "field_weld", "x": 100, "y": 150, "page": 0},
-                {"id": 2, "type": "shop_weld", "x": 200, "y": 250, "page": 0}
-            ],
-            "page": 0,
-            "filename": "test_drawing.pdf"
-        }
-        
-        success, response = self.run_test(
-            "Export Annotations",
-            "POST",
-            "api/export-annotations",
-            200,
-            data=test_annotations
-        )
-        
-        if success:
-            expected_keys = ['success', 'message', 'symbols_count']
-            for key in expected_keys:
-                if key not in response:
-                    print(f"⚠️  Warning: Missing expected key '{key}' in export response")
-                    
-            if response.get('symbols_count') != 2:
-                print(f"⚠️  Warning: Expected 2 symbols, got {response.get('symbols_count')}")
+        """Test annotations export endpoint"""
+        try:
+            test_annotations = {
+                "symbols": [
+                    {"id": 1, "type": "field_weld", "x": 100, "y": 100},
+                    {"id": 2, "type": "shop_weld", "x": 200, "y": 200}
+                ],
+                "project_name": "test_annotations"
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/export-annotations",
+                json=test_annotations,
+                timeout=10
+            )
+            
+            success = response.status_code == 200
+            
+            if success:
+                data = response.json()
+                expected_keys = ["success", "message", "symbols_count"]
+                has_keys = all(key in data for key in expected_keys)
                 
-        return success
+                if has_keys:
+                    success = (
+                        data.get("success") == True and
+                        data.get("symbols_count") == 2
+                    )
+                    details = f"- Symbols processed: {data.get('symbols_count')}"
+                else:
+                    success = False
+                    details = f"- Missing keys: {[k for k in expected_keys if k not in data]}"
+            else:
+                details = f"- Status Code: {response.status_code}"
+                
+            return self.log_test("Export Annotations", success, details)
+            
+        except Exception as e:
+            return self.log_test("Export Annotations", False, f"- Error: {str(e)}")
 
-    def test_invalid_endpoint(self):
-        """Test invalid endpoint"""
-        success, response = self.run_test(
-            "Invalid Endpoint",
-            "GET",
-            "api/nonexistent",
-            404
-        )
-        return success
+    def test_invalid_requests(self):
+        """Test error handling for invalid requests"""
+        tests = [
+            {
+                "name": "Invalid PDF Upload (non-PDF file)",
+                "method": "POST",
+                "endpoint": "/api/upload-pdf-only",
+                "files": {'file': ('test.txt', b'not a pdf', 'text/plain')},
+                "expected_status": 400
+            },
+            {
+                "name": "PDF Export without data",
+                "method": "POST", 
+                "endpoint": "/api/export-pdf",
+                "json": {},
+                "expected_status": 400
+            },
+            {
+                "name": "Invalid endpoint",
+                "method": "GET",
+                "endpoint": "/api/nonexistent",
+                "expected_status": 404
+            }
+        ]
+        
+        passed = 0
+        for test in tests:
+            try:
+                if test["method"] == "POST":
+                    if "files" in test:
+                        response = self.session.post(
+                            f"{self.base_url}{test['endpoint']}",
+                            files=test["files"],
+                            timeout=10
+                        )
+                    else:
+                        response = self.session.post(
+                            f"{self.base_url}{test['endpoint']}",
+                            json=test.get("json", {}),
+                            timeout=10
+                        )
+                elif test["method"] == "GET":
+                    response = self.session.get(
+                        f"{self.base_url}{test['endpoint']}",
+                        timeout=10
+                    )
+                
+                success = response.status_code == test["expected_status"]
+                details = f"- Expected: {test['expected_status']}, Got: {response.status_code}"
+                
+                if self.log_test(test["name"], success, details):
+                    passed += 1
+                    
+            except Exception as e:
+                self.log_test(test["name"], False, f"- Error: {str(e)}")
+        
+        return passed == len(tests)
+
+    def run_all_tests(self):
+        """Run all backend API tests"""
+        print("🚀 Starting Enhanced Weld Mapping Tool Backend API Tests")
+        print("=" * 60)
+        
+        # Test sequence - order matters for dependencies
+        tests = [
+            ("Health Check", self.test_health_check),
+            ("PDF Upload", self.test_pdf_upload),
+            ("PDF Export with Symbols", self.test_pdf_export),
+            ("Export Annotations", self.test_export_annotations),
+            ("Invalid Requests", self.test_invalid_requests)
+        ]
+        
+        for test_name, test_func in tests:
+            print(f"\n🔍 Running: {test_name}")
+            test_func()
+        
+        # Summary
+        print("\n" + "=" * 60)
+        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All backend tests PASSED! API is working correctly.")
+            return True
+        else:
+            print(f"⚠️  {self.tests_run - self.tests_passed} tests FAILED. Check the issues above.")
+            return False
 
 def main():
     print("🚀 Starting Interactive Weld Mapping Tool API Tests")
