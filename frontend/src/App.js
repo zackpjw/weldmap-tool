@@ -642,96 +642,117 @@ function App() {
                   {/* Render placed symbols with zoom scaling */}
                   {currentPageSymbols.map((symbol) => {
                     // Create custom SVG symbols for proper shapes and sizes
-                    const renderSymbol = (type) => {
-                      const size = 25; // Larger size as requested
+                    const renderSymbol = (type, isSelected = false) => {
+                      const size = 25; // Base size
                       const strokeWidth = 3;
                       const color = symbolTypes[type].color;
                       
-                      switch (type) {
-                        case 'field_weld':
-                          // Rotated square (45 degrees)
-                          return (
-                            <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
-                              <rect 
-                                x={size / 2} 
-                                y={size / 2} 
-                                width={size} 
-                                height={size} 
-                                fill="none" 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                            </svg>
-                          );
-                        case 'shop_weld':
-                          // Circle
-                          return (
-                            <svg width={size * 2} height={size * 2}>
-                              <circle 
-                                cx={size} 
-                                cy={size} 
-                                r={size / 2} 
-                                fill="none" 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                            </svg>
-                          );
-                        case 'pipe_section':
-                          // Rounded rectangle
-                          return (
-                            <svg width={size * 2} height={size}>
-                              <rect 
-                                x={strokeWidth / 2} 
-                                y={strokeWidth / 2} 
-                                width={size * 2 - strokeWidth} 
-                                height={size - strokeWidth} 
-                                rx={8} 
-                                ry={8} 
-                                fill="none" 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                            </svg>
-                          );
-                        case 'pipe_support':
-                          // Rectangle (not rounded)
-                          return (
-                            <svg width={size * 2} height={size}>
-                              <rect 
-                                x={strokeWidth / 2} 
-                                y={strokeWidth / 2} 
-                                width={size * 2 - strokeWidth} 
-                                height={size - strokeWidth} 
-                                fill="none" 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                            </svg>
-                          );
-                        case 'flange_joint':
-                          // Hexagon rotated 45 degrees with center line
-                          return (
-                            <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
-                              <polygon 
-                                points={`${size + size/2 * Math.cos(0)},${size + size/2 * Math.sin(0)} ${size + size/2 * Math.cos(Math.PI/3)},${size + size/2 * Math.sin(Math.PI/3)} ${size + size/2 * Math.cos(2*Math.PI/3)},${size + size/2 * Math.sin(2*Math.PI/3)} ${size + size/2 * Math.cos(Math.PI)},${size + size/2 * Math.sin(Math.PI)} ${size + size/2 * Math.cos(4*Math.PI/3)},${size + size/2 * Math.sin(4*Math.PI/3)} ${size + size/2 * Math.cos(5*Math.PI/3)},${size + size/2 * Math.sin(5*Math.PI/3)}`}
-                                fill="none" 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                              <line 
-                                x1={size - size/2} 
-                                y1={size} 
-                                x2={size + size/2} 
-                                y2={size} 
-                                stroke={color} 
-                                strokeWidth={strokeWidth}
-                              />
-                            </svg>
-                          );
-                        default:
-                          return null;
-                      }
+                      const getSymbolSVG = () => {
+                        switch (type) {
+                          case 'field_weld':
+                            // Rotated square (45 degrees)
+                            return (
+                              <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
+                                <rect 
+                                  x={size / 2} 
+                                  y={size / 2} 
+                                  width={size} 
+                                  height={size} 
+                                  fill="none" 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                              </svg>
+                            );
+                          case 'shop_weld':
+                            // Circle
+                            return (
+                              <svg width={size * 2} height={size * 2}>
+                                <circle 
+                                  cx={size} 
+                                  cy={size} 
+                                  r={size / 2} 
+                                  fill="none" 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                              </svg>
+                            );
+                          case 'pipe_section':
+                            // Rounded rectangle - stretched horizontally by 12%
+                            const pipeWidth = size * 2.24; // 2 * 1.12 = 12% longer
+                            return (
+                              <svg width={pipeWidth} height={size}>
+                                <rect 
+                                  x={strokeWidth / 2} 
+                                  y={strokeWidth / 2} 
+                                  width={pipeWidth - strokeWidth} 
+                                  height={size - strokeWidth} 
+                                  rx={8} 
+                                  ry={8} 
+                                  fill="none" 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                              </svg>
+                            );
+                          case 'pipe_support':
+                            // Rectangle (not rounded) - stretched horizontally by 12%
+                            const supportWidth = size * 2.24; // 2 * 1.12 = 12% longer
+                            return (
+                              <svg width={supportWidth} height={size}>
+                                <rect 
+                                  x={strokeWidth / 2} 
+                                  y={strokeWidth / 2} 
+                                  width={supportWidth - strokeWidth} 
+                                  height={size - strokeWidth} 
+                                  fill="none" 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                              </svg>
+                            );
+                          case 'flange_joint':
+                            // Hexagon rotated another 45 degrees (total 90 degrees) with horizontal center line, 10% larger
+                            const flangeSize = size * 1.1; // 10% larger
+                            return (
+                              <svg width={flangeSize * 2} height={flangeSize * 2} style={{ transform: 'rotate(90deg)' }}>
+                                <polygon 
+                                  points={`${flangeSize + flangeSize/2 * Math.cos(0)},${flangeSize + flangeSize/2 * Math.sin(0)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(2*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(2*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI)},${flangeSize + flangeSize/2 * Math.sin(Math.PI)} ${flangeSize + flangeSize/2 * Math.cos(4*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(4*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(5*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(5*Math.PI/3)}`}
+                                  fill="none" 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                                <line 
+                                  x1={flangeSize - flangeSize/2} 
+                                  y1={flangeSize} 
+                                  x2={flangeSize + flangeSize/2} 
+                                  y2={flangeSize} 
+                                  stroke={color} 
+                                  strokeWidth={strokeWidth}
+                                />
+                              </svg>
+                            );
+                          default:
+                            return null;
+                        }
+                      };
+
+                      return (
+                        <div className="relative">
+                          {getSymbolSVG()}
+                          {isSelected && (
+                            <div 
+                              className="absolute inset-0 border-2 border-blue-500 bg-blue-100 bg-opacity-20 rounded"
+                              style={{
+                                transform: 'translate(-4px, -4px)',
+                                width: 'calc(100% + 8px)',
+                                height: 'calc(100% + 8px)'
+                              }}
+                            />
+                          )}
+                        </div>
+                      );
                     };
 
                     return (
