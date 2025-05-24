@@ -302,11 +302,48 @@ async def upload_pdf(file: UploadFile = File(...)):
             analysis = await analyze_drawing_with_ai(img_base64, page_num + 1)
             
             # Generate weld map annotations
-            annotations = generate_weld_map_annotations(analysis)
+            demo_data = generate_demo_analysis(img_base64)
+            annotations = []
+            for key in ['pipes', 'fittings', 'supports', 'weld_points']:
+                for item in demo_data['analysis'].get(key, []):
+                    if key == 'pipes':
+                        # Add start and end points as field welds
+                        annotations.append({
+                            'type': 'field_weld',
+                            'shape': 'diamond',
+                            'coords': item['start_coords']
+                        })
+                        annotations.append({
+                            'type': 'field_weld',
+                            'shape': 'diamond',
+                            'coords': item['end_coords']
+                        })
+                    elif key == 'weld_points':
+                        annotations.append({
+                            'type': 'shop_weld',
+                            'shape': 'circle',
+                            'coords': item['coords']
+                        })
+                    elif key == 'supports':
+                        annotations.append({
+                            'type': 'pipe_support',
+                            'shape': 'rectangle',
+                            'coords': item['coords'],
+                            'label': item.get('label', 'PS')
+                        })
+                    else:
+                        annotations.append({
+                            'type': 'pipe_section',
+                            'shape': 'pill',
+                            'coords': item['coords']
+                        })
+            
+            # Create annotated image
+            annotated_image = create_annotated_image(img_base64, annotations)
             
             analysis_results.append({
                 "page": page_num + 1,
-                "image_base64": img_base64,  # Include for frontend display
+                "image_base64": annotated_image,  # Use annotated image
                 "analysis": analysis,
                 "weld_annotations": annotations,
                 "processed": analysis.get("success", False)
