@@ -131,13 +131,33 @@ async def export_pdf(project_data: dict):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Save temp image for PDF
-            temp_img_buffer = io.BytesIO()
-            img.save(temp_img_buffer, format='PNG')
-            temp_img_buffer.seek(0)
+            # Resize image to fit page
+            img_ratio = img.width / img.height
+            page_ratio = page_width / page_height
+            
+            if img_ratio > page_ratio:
+                # Image is wider, fit to width
+                new_width = page_width
+                new_height = page_width / img_ratio
+            else:
+                # Image is taller, fit to height
+                new_height = page_height
+                new_width = page_height * img_ratio
+            
+            img = img.resize((int(new_width), int(new_height)), Image.Resampling.LANCZOS)
+            
+            # Save as temporary file for PDF
+            temp_file = f"/tmp/temp_img_{page_num}.png"
+            img.save(temp_file, "PNG")
             
             # Draw background image
-            pdf_canvas.drawInlineImage(temp_img_buffer, 0, 0, page_width, page_height)
+            pdf_canvas.drawImage(temp_file, 0, 0, new_width, new_height)
+            
+            # Clean up temp file
+            try:
+                os.remove(temp_file)
+            except:
+                pass
             
             # Draw symbols for this page
             page_symbols = [s for s in symbols if s.get('page', 0) == page_num]
