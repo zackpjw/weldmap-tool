@@ -586,7 +586,7 @@ def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
     }
 
 def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Generate weld map annotations based on analysis and domain rules"""
+    """Generate weld map annotations focusing on green-highlighted pipes only"""
     annotations = []
     
     try:
@@ -595,109 +595,122 @@ def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[st
             
         analysis = analysis_data["analysis"]
         
-        # New structure: Use weld_joints for precise positioning
-        if "weld_joints" in analysis:
-            for joint in analysis["weld_joints"]:
-                joint_type = joint.get("type", "unknown")
-                coords = joint.get("coords", [0, 0])
+        # Process green pipes - primary focus
+        if "green_pipes" in analysis:
+            for green_pipe in analysis["green_pipes"]:
+                if not green_pipe.get("highlighted", False):
+                    continue  # Skip non-highlighted pipes
                 
-                if joint_type == "field_joint":
-                    annotations.append({
-                        "type": "field_weld",
-                        "shape": "diamond",
-                        "coords": coords,
-                        "joint_id": joint.get("id", "unknown"),
-                        "description": joint.get("description", "Field weld - diamond shape")
-                    })
-                elif joint_type == "shop_joint":
-                    annotations.append({
-                        "type": "shop_weld",
-                        "shape": "circle",
-                        "coords": coords,
-                        "joint_id": joint.get("id", "unknown"),
-                        "description": joint.get("description", "Shop weld - circular shape")
-                    })
-        
-        # Add pipe section annotations using pipe centerlines
-        if "pipes" in analysis:
-            for pipe in analysis["pipes"]:
-                centerline = pipe.get("centerline_points", [])
+                # Process weld joints on green pipes
+                weld_joints = green_pipe.get("weld_joints", [])
+                placement_areas = green_pipe.get("symbol_placement_areas", [])
+                
+                for i, joint in enumerate(weld_joints):
+                    joint_coords = joint.get("coords", [0, 0])
+                    joint_type = joint.get("type", "unknown")
+                    
+                    # Use suggested placement area if available, otherwise place near joint
+                    if i < len(placement_areas):
+                        symbol_coords = placement_areas[i].get("coords", joint_coords)
+                    else:
+                        # Place symbol near the joint with small offset
+                        symbol_coords = [joint_coords[0] + 30, joint_coords[1] - 20]
+                    
+                    if joint_type == "field_joint":
+                        annotations.append({
+                            "type": "field_weld",
+                            "shape": "diamond",
+                            "coords": symbol_coords,
+                            "pipe_target_coords": joint_coords,  # Where arrow points to
+                            "pipe_id": green_pipe.get("id", "unknown"),
+                            "description": f"Field weld - {joint.get('location_on_pipe', 'unknown')} of green pipe"
+                        })
+                    elif joint_type == "shop_joint":
+                        annotations.append({
+                            "type": "shop_weld",
+                            "shape": "circle",
+                            "coords": symbol_coords,
+                            "pipe_target_coords": joint_coords,  # Where arrow points to
+                            "pipe_id": green_pipe.get("id", "unknown"),
+                            "description": f"Shop weld - {joint.get('location_on_pipe', 'unknown')} of green pipe"
+                        })
+                
+                # Add pipe section annotation for green pipe
+                centerline = green_pipe.get("centerline_coords", [])
                 if len(centerline) >= 2:
-                    # Add pipe section annotation at midpoint
                     start = centerline[0]
                     end = centerline[-1]
                     mid_coords = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
                     
+                    # Place pipe label near centerline
+                    label_coords = [mid_coords[0] + 40, mid_coords[1] - 30]
+                    
                     annotations.append({
                         "type": "pipe_section",
                         "shape": "pill",
-                        "coords": mid_coords,
-                        "pipe_id": pipe.get("id", "unknown"),
-                        "description": "Pipe section - pill shape"
+                        "coords": label_coords,
+                        "pipe_target_coords": mid_coords,  # Points to pipe centerline
+                        "pipe_id": green_pipe.get("id", "unknown"),
+                        "description": f"Green pipe section - {green_pipe.get('diameter', 'unknown')} diameter"
                     })
-        
-        # Add pipe support annotations using contact points
-        if "supports" in analysis:
-            for support in analysis["supports"]:
-                # Use pipe contact point for arrow targeting
-                contact_point = support.get("pipe_contact_point", support.get("attachment_coords", [0, 0]))
-                
-                annotations.append({
-                    "type": "pipe_support",
-                    "shape": "rectangle",
-                    "coords": contact_point,
-                    "support_id": support.get("id", "unknown"),
-                    "label": support.get("label", "PS"),
-                    "description": "Pipe support - rectangular shape"
-                })
         
         # Fallback: Handle legacy format if new structure not available
         if not annotations:
             # Legacy format support for backward compatibility
+            if "weld_joints" in analysis:
+                for joint in analysis["weld_joints"]:
+                    joint_type = joint.get("type", "unknown")
+                    coords = joint.get("coords", [0, 0])
+                    
+                    if joint_type == "field_joint":
+                        annotations.append({
+                            "type": "field_weld",
+                            "shape": "diamond",
+                            "coords": [coords[0] + 25, coords[1] - 15],
+                            "pipe_target_coords": coords,
+                            "joint_id": joint.get("id", "unknown"),
+                            "description": joint.get("description", "Field weld - diamond shape")
+                        })
+                    elif joint_type == "shop_joint":
+                        annotations.append({
+                            "type": "shop_weld",
+                            "shape": "circle",
+                            "coords": [coords[0] + 25, coords[1] - 15],
+                            "pipe_target_coords": coords,
+                            "joint_id": joint.get("id", "unknown"),
+                            "description": joint.get("description", "Shop weld - circular shape")
+                        })
+            
+            # Legacy pipes
             if "pipes" in analysis:
                 for pipe in analysis["pipes"]:
                     if "start_coords" in pipe and "end_coords" in pipe:
                         start = pipe["start_coords"]
                         end = pipe["end_coords"]
-                        
-                        # Add field welds at pipe ends
-                        annotations.append({
-                            "type": "field_weld",
-                            "shape": "diamond",
-                            "coords": start,
-                            "pipe_id": pipe.get("id", "unknown"),
-                            "description": "Field weld - diamond shape"
-                        })
+                        mid_coords = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
                         
                         annotations.append({
-                            "type": "field_weld", 
-                            "shape": "diamond",
-                            "coords": end,
+                            "type": "pipe_section",
+                            "shape": "pill",
+                            "coords": [mid_coords[0] + 30, mid_coords[1] - 20],
+                            "pipe_target_coords": mid_coords,
                             "pipe_id": pipe.get("id", "unknown"),
-                            "description": "Field weld - diamond shape"
-                        })
-            
-            # Legacy weld points
-            if "weld_points" in analysis:
-                for weld in analysis["weld_points"]:
-                    if weld.get("type") == "shop_joint":
-                        annotations.append({
-                            "type": "shop_weld",
-                            "shape": "circle",
-                            "coords": weld["coords"],
-                            "weld_id": weld.get("id", "unknown"),
-                            "description": "Shop weld - circular shape"
+                            "description": "Pipe section - pill shape"
                         })
             
             # Legacy supports
             if "supports" in analysis:
                 for support in analysis["supports"]:
+                    contact_point = support.get("pipe_contact_point", support.get("coords", [0, 0]))
+                    support_coords = [contact_point[0] + 35, contact_point[1] - 25]
+                    
                     annotations.append({
                         "type": "pipe_support",
-                        "shape": "rectangle", 
-                        "coords": support.get("coords", [0, 0]),
+                        "shape": "rectangle",
+                        "coords": support_coords,
+                        "pipe_target_coords": contact_point,
                         "support_id": support.get("id", "unknown"),
-                        "label": support.get("label", ""),
+                        "label": support.get("label", "PS"),
                         "description": "Pipe support - rectangular shape"
                     })
                 
