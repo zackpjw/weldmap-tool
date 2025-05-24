@@ -735,8 +735,16 @@ function App() {
                 </div>
 
                 <div className="mt-4 text-sm text-gray-600">
-                  <p>
-                    <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
+                  <div className="flex justify-between items-center">
+                    <p>
+                      <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
+                    </p>
+                    <p>
+                      <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 Tip: Use mouse wheel to zoom, Ctrl+click to pan, or use the zoom controls above
                   </p>
                 </div>
               </div>
