@@ -268,23 +268,51 @@ function App() {
                 Drag and drop weld symbols exactly where you need them
               </p>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               {pdfImages.length > 0 && (
                 <>
+                  <button
+                    onClick={() => setIsDrawingMode(!isDrawingMode)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      isDrawingMode 
+                        ? 'bg-red-600 text-white hover:bg-red-700' 
+                        : 'bg-gray-600 text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    {isDrawingMode ? '✏️ Remove Mode' : '🎯 Place Mode'}
+                  </button>
+                  <button
+                    onClick={() => setShowSaveDialog(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    💾 Save Project
+                  </button>
+                  <button
+                    onClick={exportToPDF}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    📄 Export PDF
+                  </button>
                   <button
                     onClick={exportDrawing}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   >
-                    Export Page
+                    🖼️ Export PNG
                   </button>
                   <button
                     onClick={clearAllSymbols}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                   >
-                    Clear All
+                    🗑️ Clear All
                   </button>
                 </>
               )}
+              <button
+                onClick={() => setShowLoadDialog(true)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                📂 Load Project
+              </button>
             </div>
           </div>
         </div>
