@@ -1,15 +1,20 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 import os
 from dotenv import load_dotenv
 import fitz  # PyMuPDF
+from PIL import Image, ImageDraw, ImageFont
 import base64
 import io
 import uuid
 from pathlib import Path
-from typing import List
+from typing import List, Dict, Any
 import traceback
+import json
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+import math
 
 # Load environment variables
 load_dotenv()
