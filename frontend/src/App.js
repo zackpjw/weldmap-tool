@@ -699,10 +699,10 @@ function App() {
                               </svg>
                             );
                           case 'flange_joint':
-                            // Hexagon rotated another 45 degrees (total 90 degrees) with horizontal center line, 10% larger
+                            // Hexagon rotated 90 degrees clockwise from previous (total 180 degrees) with horizontal center line, 10% larger
                             const flangeSize = size * 1.1; // 10% larger
                             return (
-                              <svg width={flangeSize * 2} height={flangeSize * 2} style={{ transform: 'rotate(90deg)' }}>
+                              <svg width={flangeSize * 2} height={flangeSize * 2} style={{ transform: 'rotate(180deg)' }}>
                                 <polygon 
                                   points={`${flangeSize + flangeSize/2 * Math.cos(0)},${flangeSize + flangeSize/2 * Math.sin(0)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(2*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(2*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI)},${flangeSize + flangeSize/2 * Math.sin(Math.PI)} ${flangeSize + flangeSize/2 * Math.cos(4*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(4*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(5*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(5*Math.PI/3)}`}
                                   fill="none" 
