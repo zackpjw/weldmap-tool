@@ -173,9 +173,14 @@ function App() {
               <p className="text-lg text-gray-600 mb-2">
                 Click to select PDF file or drag and drop
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mb-3">
                 Upload your isometric engineering drawing in PDF format
               </p>
+              <div className="text-xs text-gray-400 bg-gray-50 rounded p-2 max-w-md">
+                <p className="font-medium mb-1">🎯 Two Analysis Modes:</p>
+                <p><span className="text-green-600 font-medium">Demo Mode:</span> Uses mock data to showcase functionality</p>
+                <p><span className="text-blue-600 font-medium">AI Analysis:</span> Real OpenAI Vision analysis (requires API quota)</p>
+              </div>
             </label>
           </div>
 
