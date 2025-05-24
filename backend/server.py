@@ -133,7 +133,7 @@ async def export_pdf(project_data: dict):
             
             # Save temp image for PDF
             temp_img_buffer = io.BytesIO()
-            img.save(temp_img_buffer, format='JPEG')
+            img.save(temp_img_buffer, format='PNG')
             temp_img_buffer.seek(0)
             
             # Draw background image
