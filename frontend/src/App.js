@@ -38,6 +38,12 @@ function App() {
 
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
+  // Load saved projects on component mount
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
+    setSavedProjects(saved);
+  }, []);
+
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
