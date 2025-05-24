@@ -263,8 +263,22 @@ function App() {
                   <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
                     {results.total_pages} page{results.total_pages !== 1 ? 's' : ''}
                   </span>
+                  {results.mode === 'demo' && (
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
+                      🎯 DEMO MODE
+                    </span>
+                  )}
                 </div>
               </div>
+
+              {results.mode === 'demo' && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm">
+                    <span className="font-medium">Demo Mode Active:</span> This analysis uses mock data to showcase the weld mapping functionality. 
+                    For real isometric drawing analysis, use "AI Analysis" mode with a valid OpenAI API key.
+                  </p>
+                </div>
+              )}
 
               {/* Page Results */}
               {results.results && results.results.map((pageResult, index) => (
