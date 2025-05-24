@@ -133,18 +133,24 @@ function App() {
   };
 
   const handleCanvasClick = useCallback((event) => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || isPanning) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    
+    // Account for zoom and pan
+    const rawX = event.clientX - rect.left;
+    const rawY = event.clientY - rect.top;
+    
+    // Convert to canvas coordinates considering zoom and pan
+    const x = (rawX - panOffset.x) / zoomLevel;
+    const y = (rawY - panOffset.y) / zoomLevel;
 
     // Check if clicking on existing symbol (for removal in line drawing mode)
     if (isDrawingMode) {
       const clickedSymbol = currentPageSymbols.find(symbol => {
         const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
-        return distance <= 15; // 15px tolerance
+        return distance <= 20; // Increased tolerance for larger symbols
       });
       
       if (clickedSymbol) {
@@ -165,7 +171,7 @@ function App() {
 
       setPlacedSymbols(prev => [...prev, newSymbol]);
     }
-  }, [selectedSymbolType, currentPage, isDrawingMode, currentPageSymbols]);
+  }, [selectedSymbolType, currentPage, isDrawingMode, currentPageSymbols, zoomLevel, panOffset, isPanning]);
 
   const handleSymbolDragStart = useCallback((event, symbolId) => {
     setIsDragging(true);
