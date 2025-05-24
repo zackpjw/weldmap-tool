@@ -356,6 +356,155 @@ async def test_ai_connection():
             "error": f"OpenAI API test failed: {str(e)}"
         }
 
+def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]]) -> str:
+    """Create an annotated version of the image with weld map symbols"""
+    try:
+        # Decode base64 image
+        img_data = base64.b64decode(image_base64)
+        img = Image.open(io.BytesIO(img_data))
+        
+        # Create a copy for annotation
+        annotated_img = img.copy()
+        draw = ImageDraw.Draw(annotated_img)
+        
+        # Try to get a font, fallback to default if not available
+        try:
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+        except:
+            font = ImageFont.load_default()
+            small_font = ImageFont.load_default()
+        
+        # Color mapping for different annotation types
+        colors = {
+            'field_weld': '#FF4444',      # Red for field welds
+            'shop_weld': '#44CCCC',       # Cyan for shop welds  
+            'pipe_section': '#4488FF',    # Blue for pipe sections
+            'pipe_support': '#44CC44'     # Green for supports
+        }
+        
+        # Draw annotations
+        for annotation in annotations:
+            coords = annotation.get('coords', [0, 0])
+            x, y = int(coords[0]), int(coords[1])
+            annotation_type = annotation.get('type', 'unknown')
+            shape = annotation.get('shape', 'circle')
+            color = colors.get(annotation_type, '#FFAA00')
+            
+            # Convert hex color to RGB
+            color_rgb = tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
+            
+            # Draw different shapes based on weld type
+            size = 20
+            
+            if shape == 'diamond':
+                # Diamond shape for field welds
+                points = [
+                    (x, y - size),      # Top
+                    (x + size, y),      # Right
+                    (x, y + size),      # Bottom
+                    (x - size, y)       # Left
+                ]
+                draw.polygon(points, outline=color_rgb, width=3)
+                draw.text((x + size + 5, y - 10), 'FW', fill=color_rgb, font=small_font)
+                
+            elif shape == 'circle':
+                # Circle for shop welds
+                draw.ellipse([x - size//2, y - size//2, x + size//2, y + size//2], 
+                           outline=color_rgb, width=3)
+                draw.text((x + size//2 + 5, y - 10), 'SW', fill=color_rgb, font=small_font)
+                
+            elif shape == 'rectangle':
+                # Rectangle for pipe supports
+                draw.rectangle([x - size, y - size//2, x + size, y + size//2], 
+                             outline=color_rgb, width=3)
+                label = annotation.get('label', 'PS')
+                draw.text((x + size + 5, y - 10), label, fill=color_rgb, font=small_font)
+                
+            elif shape == 'pill':
+                # Pill shape for pipe sections
+                draw.rounded_rectangle([x - size, y - size//3, x + size, y + size//3], 
+                                     radius=size//3, outline=color_rgb, width=3)
+                draw.text((x + size + 5, y - 10), 'PIPE', fill=color_rgb, font=small_font)
+        
+        # Convert back to base64
+        buffer = io.BytesIO()
+        annotated_img.save(buffer, format='PNG')
+        buffer.seek(0)
+        annotated_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        return annotated_base64
+        
+    except Exception as e:
+        print(f"Error creating annotated image: {e}")
+        return image_base64  # Return original if annotation fails
+
+def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
+    """Generate demo analysis for testing when API is not available"""
+    return {
+        "success": True,
+        "analysis": {
+            "pipes": [
+                {
+                    "id": "pipe_1",
+                    "start_coords": [150, 300],
+                    "end_coords": [450, 300],
+                    "diameter": "6 inch",
+                    "material": "carbon_steel"
+                },
+                {
+                    "id": "pipe_2", 
+                    "start_coords": [450, 300],
+                    "end_coords": [750, 200],
+                    "diameter": "6 inch",
+                    "material": "carbon_steel"
+                }
+            ],
+            "fittings": [
+                {
+                    "id": "elbow_1",
+                    "type": "elbow",
+                    "coords": [450, 300],
+                    "connections": ["pipe_1", "pipe_2"]
+                }
+            ],
+            "supports": [
+                {
+                    "id": "support_1",
+                    "label": "PS-1",
+                    "coords": [300, 350],
+                    "type": "pipe_support"
+                },
+                {
+                    "id": "support_2", 
+                    "label": "S-2",
+                    "coords": [600, 250],
+                    "type": "pipe_support"
+                }
+            ],
+            "weld_points": [
+                {
+                    "id": "weld_1",
+                    "coords": [200, 300],
+                    "type": "shop_joint", 
+                    "connected_components": ["pipe_1"]
+                },
+                {
+                    "id": "weld_2",
+                    "coords": [400, 300],
+                    "type": "shop_joint",
+                    "connected_components": ["pipe_1", "elbow_1"]
+                }
+            ],
+            "drawing_info": {
+                "scale": "1:100",
+                "title": "Demo Isometric Drawing",
+                "dimensions": "800x600"
+            }
+        },
+        "raw_response": "Demo analysis generated for testing purposes"
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
