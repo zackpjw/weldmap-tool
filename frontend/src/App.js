@@ -84,17 +84,32 @@ function App() {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    // Add new symbol at click position
-    const newSymbol = {
-      id: Date.now(),
-      type: selectedSymbolType,
-      x: x,
-      y: y,
-      page: currentPage
-    };
+    // Check if clicking on existing symbol (for removal in line drawing mode)
+    if (isDrawingMode) {
+      const clickedSymbol = currentPageSymbols.find(symbol => {
+        const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
+        return distance <= 15; // 15px tolerance
+      });
+      
+      if (clickedSymbol) {
+        removeSymbol(clickedSymbol.id);
+        return;
+      }
+    }
 
-    setPlacedSymbols(prev => [...prev, newSymbol]);
-  }, [selectedSymbolType, currentPage]);
+    // Add new symbol at click position (only if not in drawing mode)
+    if (!isDrawingMode) {
+      const newSymbol = {
+        id: Date.now(),
+        type: selectedSymbolType,
+        x: x,
+        y: y,
+        page: currentPage
+      };
+
+      setPlacedSymbols(prev => [...prev, newSymbol]);
+    }
+  }, [selectedSymbolType, currentPage, isDrawingMode, currentPageSymbols]);
 
   const handleSymbolDragStart = useCallback((event, symbolId) => {
     setIsDragging(true);
