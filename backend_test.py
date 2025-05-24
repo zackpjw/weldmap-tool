@@ -555,6 +555,10 @@ startxref
         print("\n🎯 TESTING NEW DEMO FEATURES:")
         self.test_demo_upload_endpoint()
         
+        # Test GREEN PIPE TARGETING (CRITICAL NEW FEATURE)
+        print("\n🟢 TESTING GREEN PIPE TARGETING:")
+        self.test_green_pipe_targeting()
+        
         # Test visual annotations in demo mode
         self.test_visual_annotations()
         
