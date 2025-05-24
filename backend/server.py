@@ -507,100 +507,82 @@ def draw_arrow_to_pipeline(draw, symbol_x, symbol_y, pipeline_x, pipeline_y, col
     draw.polygon(arrow_points, fill=color_rgb)
 
 def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
-    """Generate demo analysis for testing when API is not available"""
+    """Generate demo analysis for testing - simulates green-highlighted pipes"""
     return {
         "success": True,
         "analysis": {
-            "weld_joints": [
+            "green_pipes": [
                 {
-                    "id": "joint_1",
-                    "type": "field_joint",
-                    "coords": [150, 300],
-                    "pipe_segments": ["pipe_1"],
-                    "description": "Field weld at pipe start"
-                },
-                {
-                    "id": "joint_2",
-                    "type": "shop_joint",
-                    "coords": [300, 300],
-                    "pipe_segments": ["pipe_1"],
-                    "description": "Shop weld mid-pipe"
-                },
-                {
-                    "id": "joint_3",
-                    "type": "field_joint",
-                    "coords": [450, 300],
-                    "pipe_segments": ["pipe_1", "pipe_2"],
-                    "description": "Field weld at elbow connection"
-                },
-                {
-                    "id": "joint_4", 
-                    "type": "shop_joint",
-                    "coords": [600, 250],
-                    "pipe_segments": ["pipe_2"],
-                    "description": "Shop weld on angled pipe"
-                },
-                {
-                    "id": "joint_5",
-                    "type": "field_joint",
-                    "coords": [750, 200],
-                    "pipe_segments": ["pipe_2"],
-                    "description": "Field weld at pipe end"
-                }
-            ],
-            "pipes": [
-                {
-                    "id": "pipe_1",
-                    "start_coords": [150, 300],
-                    "end_coords": [450, 300],
-                    "centerline_points": [[150, 300], [450, 300]],
+                    "id": "green_pipe_1",
+                    "highlighted": True,
+                    "centerline_coords": [[200, 300], [400, 300], [450, 300]],
+                    "weld_joints": [
+                        {
+                            "coords": [200, 300],
+                            "type": "field_joint",
+                            "location_on_pipe": "start"
+                        },
+                        {
+                            "coords": [300, 300],
+                            "type": "shop_joint",
+                            "location_on_pipe": "middle"
+                        },
+                        {
+                            "coords": [450, 300],
+                            "type": "field_joint",
+                            "location_on_pipe": "end"
+                        }
+                    ],
                     "diameter": "6 inch",
-                    "material": "carbon_steel"
+                    "symbol_placement_areas": [
+                        {"coords": [180, 280], "side": "top", "distance_to_pipe": 20},
+                        {"coords": [280, 320], "side": "bottom", "distance_to_pipe": 20},
+                        {"coords": [430, 280], "side": "top", "distance_to_pipe": 20}
+                    ]
                 },
                 {
-                    "id": "pipe_2", 
-                    "start_coords": [450, 300],
-                    "end_coords": [750, 200],
-                    "centerline_points": [[450, 300], [750, 200]],
+                    "id": "green_pipe_2",
+                    "highlighted": True,
+                    "centerline_coords": [[450, 300], [600, 250], [700, 200]],
+                    "weld_joints": [
+                        {
+                            "coords": [450, 300],
+                            "type": "field_joint",
+                            "location_on_pipe": "start"
+                        },
+                        {
+                            "coords": [550, 275],
+                            "type": "shop_joint",
+                            "location_on_pipe": "middle"
+                        },
+                        {
+                            "coords": [700, 200],
+                            "type": "field_joint",
+                            "location_on_pipe": "end"
+                        }
+                    ],
                     "diameter": "6 inch",
-                    "material": "carbon_steel"
+                    "symbol_placement_areas": [
+                        {"coords": [470, 280], "side": "right", "distance_to_pipe": 25},
+                        {"coords": [530, 255], "side": "left", "distance_to_pipe": 25},
+                        {"coords": [720, 180], "side": "right", "distance_to_pipe": 25}
+                    ]
                 }
             ],
-            "fittings": [
+            "non_green_pipes": [
                 {
-                    "id": "elbow_1",
-                    "type": "elbow",
-                    "center_coords": [450, 300],
-                    "connection_points": [[430, 300], [470, 290]],
-                    "connected_pipes": ["pipe_1", "pipe_2"]
+                    "id": "regular_pipe_1",
+                    "highlighted": False,
+                    "note": "No weld mapping required - not highlighted in green"
                 }
             ],
-            "supports": [
-                {
-                    "id": "support_1",
-                    "label": "PS-1",
-                    "attachment_coords": [300, 320],
-                    "pipe_contact_point": [300, 300]
-                },
-                {
-                    "id": "support_2", 
-                    "label": "S-2",
-                    "attachment_coords": [600, 270],
-                    "pipe_contact_point": [600, 250]
-                }
-            ],
-            "drawing_analysis": {
-                "clear_areas": {
-                    "left_margin": [10, 50, 80, 500],
-                    "right_margin": [720, 50, 790, 500],
-                    "top_margin": [50, 10, 750, 80],
-                    "bottom_margin": [50, 520, 750, 590]
-                },
-                "pipe_flow_direction": "left_to_right",
-                "scale": "1:100"
+            "drawing_bounds": {
+                "width": 800,
+                "height": 600,
+                "drawing_area": [50, 50, 750, 550]
             }
         },
-        "raw_response": "Demo analysis with precise coordinates for professional weld mapping"
+        "raw_response": "Demo analysis focusing on green-highlighted pipes only for weld mapping"
     }
 
 def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
