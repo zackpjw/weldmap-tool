@@ -729,11 +729,16 @@ function App() {
                           {getSymbolSVG()}
                           {isSelected && (
                             <div 
-                              className="absolute inset-0 border-2 border-blue-500 bg-blue-100 bg-opacity-20 rounded"
+                              className="absolute inset-0 border border-black rounded"
                               style={{
-                                transform: 'translate(-4px, -4px)',
-                                width: 'calc(100% + 8px)',
-                                height: 'calc(100% + 8px)'
+                                transform: 'translate(-6px, -6px)',
+                                width: 'calc(100% + 12px)',
+                                height: 'calc(100% + 12px)',
+                                borderWidth: '1px',
+                                borderStyle: 'solid',
+                                borderColor: 'black',
+                                backgroundColor: 'transparent',
+                                pointerEvents: 'none'
                               }}
                             />
                           )}
