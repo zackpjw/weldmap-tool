@@ -620,8 +620,8 @@ function App() {
                       backgroundRepeat: 'no-repeat',
                       backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
                       cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer',
-                      transform: `scale(${zoomLevel})`,
-                      transformOrigin: 'top left'
+                      width: '100%',
+                      height: 'auto'
                     }}
                   />
                   
