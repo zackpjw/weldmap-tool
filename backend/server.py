@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 import os
 from dotenv import load_dotenv
 import fitz  # PyMuPDF
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import base64
 import io
 import uuid
@@ -15,6 +15,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 import traceback
 from typing import List, Dict, Any
 import time
+import math
 
 # Load environment variables
 load_dotenv()
