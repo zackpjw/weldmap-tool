@@ -350,21 +350,13 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
             'pipe_support': '#44CC44'     # Green for supports
         }
         
-        # Define margins for symbol placement (avoid overlapping with drawing)
-        margin = 60
-        symbol_areas = {
-            'left': (margin//2, margin, margin//2 + 40, img_height - margin),
-            'right': (img_width - margin - 40, margin, img_width - margin//2, img_height - margin),
-            'top': (margin, margin//2, img_width - margin, margin//2 + 40),
-            'bottom': (margin, img_height - margin - 40, img_width - margin, img_height - margin//2)
-        }
-        
-        # Counter for symbol positioning
-        symbol_counters = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
-        
         # Draw annotations with arrows pointing to pipeline locations
         for i, annotation in enumerate(annotations):
-            pipeline_coords = annotation.get('coords', [img_width//2, img_height//2])
+            symbol_coords = annotation.get('coords', [img_width//2, img_height//2])
+            symbol_x, symbol_y = int(symbol_coords[0]), int(symbol_coords[1])
+            
+            # Get the pipeline target coordinates (where arrow should point)
+            pipeline_coords = annotation.get('pipe_target_coords', symbol_coords)
             pipeline_x, pipeline_y = int(pipeline_coords[0]), int(pipeline_coords[1])
             
             annotation_type = annotation.get('type', 'unknown')
@@ -374,33 +366,9 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
             # Convert hex color to RGB
             color_rgb = tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
             
-            # Determine which margin area to use based on pipeline location
-            if pipeline_x < img_width // 3:
-                area = 'right'  # Pipeline on left, symbols on right
-            elif pipeline_x > 2 * img_width // 3:
-                area = 'left'   # Pipeline on right, symbols on left
-            elif pipeline_y < img_height // 2:
-                area = 'bottom' # Pipeline on top, symbols on bottom
-            else:
-                area = 'top'    # Pipeline on bottom, symbols on top
-            
-            # Calculate symbol position in the chosen area
-            area_bounds = symbol_areas[area]
-            if area in ['left', 'right']:
-                symbol_x = (area_bounds[0] + area_bounds[2]) // 2
-                symbol_y = area_bounds[1] + (symbol_counters[area] * 50) + 25
-            else:  # top or bottom
-                symbol_x = area_bounds[0] + (symbol_counters[area] * 80) + 40
-                symbol_y = (area_bounds[1] + area_bounds[3]) // 2
-            
-            # Ensure symbol stays within bounds
-            symbol_x = max(area_bounds[0] + 20, min(symbol_x, area_bounds[2] - 20))
-            symbol_y = max(area_bounds[1] + 20, min(symbol_y, area_bounds[3] - 20))
-            
-            symbol_counters[area] += 1
-            
-            # Draw arrow from symbol to pipeline location
-            draw_arrow_to_pipeline(draw, symbol_x, symbol_y, pipeline_x, pipeline_y, color_rgb)
+            # Draw arrow from symbol to pipeline location (only if they're different)
+            if abs(symbol_x - pipeline_x) > 10 or abs(symbol_y - pipeline_y) > 10:
+                draw_arrow_to_pipeline(draw, symbol_x, symbol_y, pipeline_x, pipeline_y, color_rgb)
             
             # Draw weld symbol at symbol location
             symbol_size = 15
