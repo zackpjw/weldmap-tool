@@ -516,11 +516,49 @@ def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
     return {
         "success": True,
         "analysis": {
+            "weld_joints": [
+                {
+                    "id": "joint_1",
+                    "type": "field_joint",
+                    "coords": [150, 300],
+                    "pipe_segments": ["pipe_1"],
+                    "description": "Field weld at pipe start"
+                },
+                {
+                    "id": "joint_2",
+                    "type": "shop_joint",
+                    "coords": [300, 300],
+                    "pipe_segments": ["pipe_1"],
+                    "description": "Shop weld mid-pipe"
+                },
+                {
+                    "id": "joint_3",
+                    "type": "field_joint",
+                    "coords": [450, 300],
+                    "pipe_segments": ["pipe_1", "pipe_2"],
+                    "description": "Field weld at elbow connection"
+                },
+                {
+                    "id": "joint_4", 
+                    "type": "shop_joint",
+                    "coords": [600, 250],
+                    "pipe_segments": ["pipe_2"],
+                    "description": "Shop weld on angled pipe"
+                },
+                {
+                    "id": "joint_5",
+                    "type": "field_joint",
+                    "coords": [750, 200],
+                    "pipe_segments": ["pipe_2"],
+                    "description": "Field weld at pipe end"
+                }
+            ],
             "pipes": [
                 {
                     "id": "pipe_1",
                     "start_coords": [150, 300],
                     "end_coords": [450, 300],
+                    "centerline_points": [[150, 300], [450, 300]],
                     "diameter": "6 inch",
                     "material": "carbon_steel"
                 },
@@ -528,6 +566,7 @@ def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
                     "id": "pipe_2", 
                     "start_coords": [450, 300],
                     "end_coords": [750, 200],
+                    "centerline_points": [[450, 300], [750, 200]],
                     "diameter": "6 inch",
                     "material": "carbon_steel"
                 }
@@ -536,45 +575,37 @@ def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
                 {
                     "id": "elbow_1",
                     "type": "elbow",
-                    "coords": [450, 300],
-                    "connections": ["pipe_1", "pipe_2"]
+                    "center_coords": [450, 300],
+                    "connection_points": [[430, 300], [470, 290]],
+                    "connected_pipes": ["pipe_1", "pipe_2"]
                 }
             ],
             "supports": [
                 {
                     "id": "support_1",
                     "label": "PS-1",
-                    "coords": [300, 350],
-                    "type": "pipe_support"
+                    "attachment_coords": [300, 320],
+                    "pipe_contact_point": [300, 300]
                 },
                 {
                     "id": "support_2", 
                     "label": "S-2",
-                    "coords": [600, 250],
-                    "type": "pipe_support"
+                    "attachment_coords": [600, 270],
+                    "pipe_contact_point": [600, 250]
                 }
             ],
-            "weld_points": [
-                {
-                    "id": "weld_1",
-                    "coords": [200, 300],
-                    "type": "shop_joint", 
-                    "connected_components": ["pipe_1"]
+            "drawing_analysis": {
+                "clear_areas": {
+                    "left_margin": [10, 50, 80, 500],
+                    "right_margin": [720, 50, 790, 500],
+                    "top_margin": [50, 10, 750, 80],
+                    "bottom_margin": [50, 520, 750, 590]
                 },
-                {
-                    "id": "weld_2",
-                    "coords": [400, 300],
-                    "type": "shop_joint",
-                    "connected_components": ["pipe_1", "elbow_1"]
-                }
-            ],
-            "drawing_info": {
-                "scale": "1:100",
-                "title": "Demo Isometric Drawing",
-                "dimensions": "800x600"
+                "pipe_flow_direction": "left_to_right",
+                "scale": "1:100"
             }
         },
-        "raw_response": "Demo analysis generated for testing purposes"
+        "raw_response": "Demo analysis with precise coordinates for professional weld mapping"
     }
 
 def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
