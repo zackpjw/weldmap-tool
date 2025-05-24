@@ -50,8 +50,6 @@ function App() {
     setSavedProjects(saved);
   }, []);
 
-  const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
-
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     if (file && file.type === 'application/pdf') {
