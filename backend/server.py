@@ -312,7 +312,7 @@ async def test_ai_connection():
         }
 
 def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]]) -> str:
-    """Create an annotated version of the image with weld map symbols"""
+    """Create an annotated version of the image with weld map symbols connected to pipeline locations"""
     try:
         # Decode base64 image
         img_data = base64.b64decode(image_base64)
@@ -322,9 +322,12 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
         annotated_img = img.copy()
         draw = ImageDraw.Draw(annotated_img)
         
+        # Get image dimensions
+        img_width, img_height = annotated_img.size
+        
         # Try to get a font, fallback to default if not available
         try:
-            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+            font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
             small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
         except:
             font = ImageFont.load_default()
@@ -338,10 +341,23 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
             'pipe_support': '#44CC44'     # Green for supports
         }
         
-        # Draw annotations
-        for annotation in annotations:
-            coords = annotation.get('coords', [0, 0])
-            x, y = int(coords[0]), int(coords[1])
+        # Define margins for symbol placement (avoid overlapping with drawing)
+        margin = 60
+        symbol_areas = {
+            'left': (margin//2, margin, margin//2 + 40, img_height - margin),
+            'right': (img_width - margin - 40, margin, img_width - margin//2, img_height - margin),
+            'top': (margin, margin//2, img_width - margin, margin//2 + 40),
+            'bottom': (margin, img_height - margin - 40, img_width - margin, img_height - margin//2)
+        }
+        
+        # Counter for symbol positioning
+        symbol_counters = {'left': 0, 'right': 0, 'top': 0, 'bottom': 0}
+        
+        # Draw annotations with arrows pointing to pipeline locations
+        for i, annotation in enumerate(annotations):
+            pipeline_coords = annotation.get('coords', [img_width//2, img_height//2])
+            pipeline_x, pipeline_y = int(pipeline_coords[0]), int(pipeline_coords[1])
+            
             annotation_type = annotation.get('type', 'unknown')
             shape = annotation.get('shape', 'circle')
             color = colors.get(annotation_type, '#FFAA00')
@@ -349,38 +365,84 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
             # Convert hex color to RGB
             color_rgb = tuple(int(color[i:i+2], 16) for i in (1, 3, 5))
             
-            # Draw different shapes based on weld type
-            size = 20
+            # Determine which margin area to use based on pipeline location
+            if pipeline_x < img_width // 3:
+                area = 'right'  # Pipeline on left, symbols on right
+            elif pipeline_x > 2 * img_width // 3:
+                area = 'left'   # Pipeline on right, symbols on left
+            elif pipeline_y < img_height // 2:
+                area = 'bottom' # Pipeline on top, symbols on bottom
+            else:
+                area = 'top'    # Pipeline on bottom, symbols on top
+            
+            # Calculate symbol position in the chosen area
+            area_bounds = symbol_areas[area]
+            if area in ['left', 'right']:
+                symbol_x = (area_bounds[0] + area_bounds[2]) // 2
+                symbol_y = area_bounds[1] + (symbol_counters[area] * 50) + 25
+            else:  # top or bottom
+                symbol_x = area_bounds[0] + (symbol_counters[area] * 80) + 40
+                symbol_y = (area_bounds[1] + area_bounds[3]) // 2
+            
+            # Ensure symbol stays within bounds
+            symbol_x = max(area_bounds[0] + 20, min(symbol_x, area_bounds[2] - 20))
+            symbol_y = max(area_bounds[1] + 20, min(symbol_y, area_bounds[3] - 20))
+            
+            symbol_counters[area] += 1
+            
+            # Draw arrow from symbol to pipeline location
+            draw_arrow_to_pipeline(draw, symbol_x, symbol_y, pipeline_x, pipeline_y, color_rgb)
+            
+            # Draw weld symbol at symbol location
+            symbol_size = 15
+            label_text = ""
             
             if shape == 'diamond':
                 # Diamond shape for field welds
                 points = [
-                    (x, y - size),      # Top
-                    (x + size, y),      # Right
-                    (x, y + size),      # Bottom
-                    (x - size, y)       # Left
+                    (symbol_x, symbol_y - symbol_size),      # Top
+                    (symbol_x + symbol_size, symbol_y),      # Right
+                    (symbol_x, symbol_y + symbol_size),      # Bottom
+                    (symbol_x - symbol_size, symbol_y)       # Left
                 ]
-                draw.polygon(points, outline=color_rgb, width=3)
-                draw.text((x + size + 5, y - 10), 'FW', fill=color_rgb, font=small_font)
+                draw.polygon(points, outline=color_rgb, fill='white', width=2)
+                label_text = "FW"
                 
             elif shape == 'circle':
                 # Circle for shop welds
-                draw.ellipse([x - size//2, y - size//2, x + size//2, y + size//2], 
-                           outline=color_rgb, width=3)
-                draw.text((x + size//2 + 5, y - 10), 'SW', fill=color_rgb, font=small_font)
+                draw.ellipse([symbol_x - symbol_size, symbol_y - symbol_size, 
+                             symbol_x + symbol_size, symbol_y + symbol_size], 
+                           outline=color_rgb, fill='white', width=2)
+                label_text = "SW"
                 
             elif shape == 'rectangle':
                 # Rectangle for pipe supports
-                draw.rectangle([x - size, y - size//2, x + size, y + size//2], 
-                             outline=color_rgb, width=3)
-                label = annotation.get('label', 'PS')
-                draw.text((x + size + 5, y - 10), label, fill=color_rgb, font=small_font)
+                draw.rectangle([symbol_x - symbol_size, symbol_y - symbol_size//2, 
+                               symbol_x + symbol_size, symbol_y + symbol_size//2], 
+                             outline=color_rgb, fill='white', width=2)
+                label_text = annotation.get('label', 'PS')
                 
             elif shape == 'pill':
                 # Pill shape for pipe sections
-                draw.rounded_rectangle([x - size, y - size//3, x + size, y + size//3], 
-                                     radius=size//3, outline=color_rgb, width=3)
-                draw.text((x + size + 5, y - 10), 'PIPE', fill=color_rgb, font=small_font)
+                draw.rounded_rectangle([symbol_x - symbol_size, symbol_y - symbol_size//2, 
+                                       symbol_x + symbol_size, symbol_y + symbol_size//2], 
+                                     radius=symbol_size//2, outline=color_rgb, fill='white', width=2)
+                label_text = "PIPE"
+            
+            # Draw label text near symbol
+            if label_text:
+                # Draw text background for better readability
+                text_bbox = draw.textbbox((0, 0), label_text, font=small_font)
+                text_width = text_bbox[2] - text_bbox[0]
+                text_height = text_bbox[3] - text_bbox[1]
+                
+                text_x = symbol_x - text_width // 2
+                text_y = symbol_y + symbol_size + 5
+                
+                # Draw white background for text
+                draw.rectangle([text_x - 2, text_y - 2, text_x + text_width + 2, text_y + text_height + 2], 
+                              fill='white', outline=color_rgb)
+                draw.text((text_x, text_y), label_text, fill=color_rgb, font=small_font)
         
         # Convert back to base64
         buffer = io.BytesIO()
@@ -393,6 +455,47 @@ def create_annotated_image(image_base64: str, annotations: List[Dict[str, Any]])
     except Exception as e:
         print(f"Error creating annotated image: {e}")
         return image_base64  # Return original if annotation fails
+
+def draw_arrow_to_pipeline(draw, symbol_x, symbol_y, pipeline_x, pipeline_y, color_rgb):
+    """Draw an arrow from the weld symbol to the pipeline location"""
+    # Calculate arrow direction
+    dx = pipeline_x - symbol_x
+    dy = pipeline_y - symbol_y
+    distance = math.sqrt(dx*dx + dy*dy)
+    
+    if distance < 10:  # Too close, don't draw arrow
+        return
+    
+    # Normalize direction
+    dx_norm = dx / distance
+    dy_norm = dy / distance
+    
+    # Arrow line (stop short of pipeline to avoid overlap)
+    line_end_x = pipeline_x - dx_norm * 15
+    line_end_y = pipeline_y - dy_norm * 15
+    
+    # Draw main arrow line
+    draw.line([(symbol_x, symbol_y), (line_end_x, line_end_y)], fill=color_rgb, width=2)
+    
+    # Draw arrowhead
+    arrowhead_size = 8
+    # Calculate perpendicular direction for arrowhead
+    perp_x = -dy_norm
+    perp_y = dx_norm
+    
+    # Arrowhead points
+    head_point1_x = line_end_x - dx_norm * arrowhead_size + perp_x * arrowhead_size // 2
+    head_point1_y = line_end_y - dy_norm * arrowhead_size + perp_y * arrowhead_size // 2
+    head_point2_x = line_end_x - dx_norm * arrowhead_size - perp_x * arrowhead_size // 2
+    head_point2_y = line_end_y - dy_norm * arrowhead_size - perp_y * arrowhead_size // 2
+    
+    # Draw arrowhead
+    arrow_points = [
+        (line_end_x, line_end_y),
+        (head_point1_x, head_point1_y),
+        (head_point2_x, head_point2_y)
+    ]
+    draw.polygon(arrow_points, fill=color_rgb)
 
 def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
     """Generate demo analysis for testing when API is not available"""
