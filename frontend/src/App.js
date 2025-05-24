@@ -79,11 +79,29 @@ function App() {
     setIsPanning(false);
   }, []);
 
-  // Load saved projects on component mount
+  // Load saved projects on component mount and add keyboard listener
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
     setSavedProjects(saved);
-  }, []);
+
+    // Add keyboard event listener for delete
+    const handleKeyDown = (event) => {
+      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedSymbolId) {
+        event.preventDefault();
+        removeSymbol(selectedSymbolId);
+        setSelectedSymbolId(null);
+      }
+      if (event.key === 'Escape') {
+        setSelectedSymbolId(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedSymbolId]);
 
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
