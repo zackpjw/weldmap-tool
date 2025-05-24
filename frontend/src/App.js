@@ -524,6 +524,8 @@ function App() {
                     <li>• Click on drawing to place</li>
                     <li>• Drag symbols to move</li>
                     <li>• Double-click to remove</li>
+                    <li>• Use zoom controls or scroll wheel</li>
+                    <li>• Ctrl+click to pan drawing</li>
                   </ul>
                 </div>
 
