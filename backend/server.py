@@ -460,6 +460,79 @@ def generate_demo_analysis(image_base64: str) -> Dict[str, Any]:
         "raw_response": "Demo analysis generated for testing purposes"
     }
 
+def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generate weld map annotations based on analysis and domain rules"""
+    annotations = []
+    
+    try:
+        if "analysis" not in analysis_data or not analysis_data["analysis"]:
+            return annotations
+            
+        analysis = analysis_data["analysis"]
+        
+        # Rule 1: Field welds (diamond shape) - every 6 meters on pipes
+        if "pipes" in analysis:
+            for pipe in analysis["pipes"]:
+                if "start_coords" in pipe and "end_coords" in pipe:
+                    start = pipe["start_coords"]
+                    end = pipe["end_coords"]
+                    
+                    # Place field welds at start and end of each pipe
+                    annotations.append({
+                        "type": "field_weld",
+                        "shape": "diamond",
+                        "coords": start,
+                        "pipe_id": pipe.get("id", "unknown"),
+                        "description": "Field weld - diamond shape"
+                    })
+                    
+                    annotations.append({
+                        "type": "field_weld", 
+                        "shape": "diamond",
+                        "coords": end,
+                        "pipe_id": pipe.get("id", "unknown"),
+                        "description": "Field weld - diamond shape"
+                    })
+                    
+                    # Add pipe section annotation between start and end
+                    mid_coords = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2]
+                    annotations.append({
+                        "type": "pipe_section",
+                        "shape": "pill",
+                        "coords": mid_coords,
+                        "pipe_id": pipe.get("id", "unknown"),
+                        "description": "Pipe section - pill shape"
+                    })
+        
+        # Rule 2: Shop joints (circular shape) - black dots between field joints
+        if "weld_points" in analysis:
+            for weld in analysis["weld_points"]:
+                if weld.get("type") == "shop_joint":
+                    annotations.append({
+                        "type": "shop_weld",
+                        "shape": "circle",
+                        "coords": weld["coords"],
+                        "weld_id": weld.get("id", "unknown"),
+                        "description": "Shop weld - circular shape"
+                    })
+        
+        # Rule 3: Rectangular boxes for pipe supports
+        if "supports" in analysis:
+            for support in analysis["supports"]:
+                annotations.append({
+                    "type": "pipe_support",
+                    "shape": "rectangle", 
+                    "coords": support["coords"],
+                    "support_id": support.get("id", "unknown"),
+                    "label": support.get("label", ""),
+                    "description": "Pipe support - rectangular shape"
+                })
+                
+    except Exception as e:
+        print(f"Error generating weld map annotations: {e}")
+    
+    return annotations
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
