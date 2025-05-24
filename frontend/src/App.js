@@ -165,18 +165,27 @@ function App() {
     const x = (rawX - panOffset.x) / zoomLevel;
     const y = (rawY - panOffset.y) / zoomLevel;
 
-    // Check if clicking on existing symbol (for removal in line drawing mode)
-    if (isDrawingMode) {
-      const clickedSymbol = currentPageSymbols.find(symbol => {
-        const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
-        return distance <= 20; // Increased tolerance for larger symbols
-      });
-      
-      if (clickedSymbol) {
+    // Check if clicking on existing symbol (for selection or removal)
+    const clickedSymbol = currentPageSymbols.find(symbol => {
+      const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
+      return distance <= 30; // Increased tolerance for larger symbols
+    });
+
+    if (clickedSymbol) {
+      if (isDrawingMode) {
+        // Remove mode - delete symbol
         removeSymbol(clickedSymbol.id);
+        setSelectedSymbolId(null);
+        return;
+      } else {
+        // Select symbol
+        setSelectedSymbolId(clickedSymbol.id);
         return;
       }
     }
+
+    // Clear selection if clicking on empty area
+    setSelectedSymbolId(null);
 
     // Add new symbol at click position (only if not in drawing mode)
     if (!isDrawingMode) {
