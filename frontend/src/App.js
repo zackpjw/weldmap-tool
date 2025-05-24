@@ -242,29 +242,9 @@ function App() {
     );
   }, [draggedSymbol, zoomLevel, panOffset]);
 
-  const removeSymbol = (symbolId) => {
-    setPlacedSymbols(prev => prev.filter(symbol => symbol.id !== symbolId));
-  };
-
   const clearAllSymbols = () => {
     setPlacedSymbols([]);
-  };
-
-  const exportDrawing = async () => {
-    if (pdfImages.length === 0 || !canvasRef.current) return;
-
-    try {
-      const canvas = canvasRef.current;
-      const dataURL = canvas.toDataURL('image/png');
-      
-      // Create download link
-      const link = document.createElement('a');
-      link.download = `weld_map_page_${currentPage + 1}.png`;
-      link.href = dataURL;
-      link.click();
-    } catch (err) {
-      setError('Error exporting drawing');
-    }
+    setSelectedSymbolId(null);
   };
 
   const exportToPDF = async () => {
