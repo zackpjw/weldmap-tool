@@ -190,24 +190,44 @@ function App() {
                     Size: {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
-                <button
-                  onClick={handleUpload}
-                  disabled={isProcessing}
-                  className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                    isProcessing
-                      ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-                      : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105'
-                  }`}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Processing...
-                    </div>
-                  ) : (
-                    'Analyze Drawing'
-                  )}
-                </button>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => handleUpload(true)}
+                    disabled={isProcessing}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      isProcessing
+                        ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700 hover:scale-105'
+                    }`}
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </div>
+                    ) : (
+                      'Demo Mode'
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleUpload(false)}
+                    disabled={isProcessing}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                      isProcessing
+                        ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 hover:scale-105'
+                    }`}
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </div>
+                    ) : (
+                      'AI Analysis'
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}
