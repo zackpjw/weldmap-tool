@@ -97,6 +97,106 @@ async def upload_pdf_only(file: UploadFile = File(...)):
             
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
+@app.post("/api/export-pdf")
+async def export_pdf(project_data: dict):
+    """Export annotated drawing as PDF with placed symbols"""
+    try:
+        filename = project_data.get('filename', 'weld_mapping')
+        symbols = project_data.get('symbols', [])
+        images = project_data.get('images', [])
+        
+        if not images:
+            raise HTTPException(status_code=400, detail="No images to export")
+        
+        # Create PDF buffer
+        buffer = io.BytesIO()
+        pdf_canvas = canvas.Canvas(buffer, pagesize=letter)
+        page_width, page_height = letter
+        
+        # Symbol colors mapping
+        symbol_colors = {
+            'field_weld': (0, 0.4, 1),      # Blue
+            'shop_weld': (0, 0.4, 1),       # Blue
+            'pipe_section': (0, 0.4, 1),    # Blue
+            'pipe_support': (1, 0, 0),      # Red
+            'flange_joint': (0, 0.4, 1)     # Blue
+        }
+        
+        for page_num, image_base64 in enumerate(images):
+            # Decode and process background image
+            img_data = base64.b64decode(image_base64)
+            img = Image.open(io.BytesIO(img_data))
+            
+            # Convert to RGB if necessary
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Save temp image for PDF
+            temp_img_buffer = io.BytesIO()
+            img.save(temp_img_buffer, format='JPEG')
+            temp_img_buffer.seek(0)
+            
+            # Draw background image
+            pdf_canvas.drawInlineImage(temp_img_buffer, 0, 0, page_width, page_height)
+            
+            # Draw symbols for this page
+            page_symbols = [s for s in symbols if s.get('page', 0) == page_num]
+            
+            for symbol in page_symbols:
+                x = symbol.get('x', 0) * (page_width / 800)  # Scale from canvas to PDF
+                y = (600 - symbol.get('y', 0)) * (page_height / 600)  # Flip Y and scale
+                symbol_type = symbol.get('type', 'field_weld')
+                
+                # Set color
+                color = symbol_colors.get(symbol_type, (0, 0, 1))
+                pdf_canvas.setStrokeColorRGB(*color)
+                pdf_canvas.setFillColorRGB(*color)
+                
+                # Draw symbol based on type
+                if symbol_type == 'field_weld':
+                    # Diamond
+                    size = 10
+                    pdf_canvas.polygon([(x, y+size), (x+size, y), (x, y-size), (x-size, y)], 
+                                     stroke=1, fill=0)
+                elif symbol_type == 'shop_weld':
+                    # Circle
+                    pdf_canvas.circle(x, y, 8, stroke=1, fill=0)
+                elif symbol_type == 'pipe_section':
+                    # Pill shape (rounded rectangle)
+                    pdf_canvas.roundRect(x-12, y-5, 24, 10, 5, stroke=1, fill=0)
+                elif symbol_type == 'pipe_support':
+                    # Rectangle
+                    pdf_canvas.rect(x-10, y-6, 20, 12, stroke=1, fill=0)
+                elif symbol_type == 'flange_joint':
+                    # Hexagon
+                    size = 8
+                    hex_points = []
+                    for i in range(6):
+                        angle = i * math.pi / 3
+                        px = x + size * math.cos(angle)
+                        py = y + size * math.sin(angle)
+                        hex_points.append((px, py))
+                    pdf_canvas.polygon(hex_points, stroke=1, fill=0)
+                    # Line through center
+                    pdf_canvas.line(x-size, y, x+size, y)
+            
+            # Add new page if not the last page
+            if page_num < len(images) - 1:
+                pdf_canvas.showPage()
+        
+        pdf_canvas.save()
+        buffer.seek(0)
+        
+        # Return PDF as response
+        return Response(
+            content=buffer.getvalue(),
+            media_type="application/pdf",
+            headers={"Content-Disposition": f"attachment; filename={filename}_annotated.pdf"}
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting PDF: {str(e)}")
+
 @app.post("/api/export-annotations")
 async def export_annotations(annotations_data: dict):
     """Export annotated drawing with placed symbols"""
