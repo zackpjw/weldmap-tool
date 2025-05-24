@@ -533,6 +533,66 @@ def generate_weld_map_annotations(analysis_data: Dict[str, Any]) -> List[Dict[st
     
     return annotations
 
+@app.post("/api/demo-upload")
+async def demo_upload(file: UploadFile = File(...)):
+    """Demo upload that works without AI API - uses mock data"""
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Only PDF files are allowed")
+    
+    try:
+        # Save uploaded file
+        file_id = str(uuid.uuid4())
+        file_path = UPLOAD_DIR / f"{file_id}.pdf"
+        
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Convert PDF to images
+        images = pdf_to_images(str(file_path))
+        
+        # Generate demo analysis and annotations
+        demo_results = []
+        for page_num, img_base64 in enumerate(images):
+            print(f"Generating demo analysis for page {page_num + 1}...")
+            
+            # Use demo analysis
+            demo_analysis = generate_demo_analysis(img_base64)
+            annotations = generate_weld_map_annotations(demo_analysis)
+            
+            # Create annotated image
+            annotated_image = create_annotated_image(img_base64, annotations)
+            
+            demo_results.append({
+                "page": page_num + 1,
+                "image_base64": annotated_image,
+                "original_image": img_base64,
+                "analysis": demo_analysis,
+                "weld_annotations": annotations,
+                "processed": True,
+                "mode": "demo"
+            })
+        
+        # Clean up uploaded file
+        file_path.unlink()
+        
+        return JSONResponse({
+            "success": True,
+            "file_id": file_id,
+            "filename": file.filename,
+            "total_pages": len(images),
+            "results": demo_results,
+            "mode": "demo",
+            "note": "This is a demo analysis with mock data to showcase functionality"
+        })
+        
+    except Exception as e:
+        # Clean up on error
+        if 'file_path' in locals() and file_path.exists():
+            file_path.unlink()
+            
+        raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)
