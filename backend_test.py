@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend API Testing Script for AI Isometric Drawing Analyzer
-Tests all backend endpoints and functionality
+Backend API Testing for Enhanced Interactive Weld Mapping Tool
+Tests all API endpoints including the new PDF export functionality
 """
 
 import requests
@@ -17,6 +17,9 @@ class WeldMappingAPITester:
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
+        self.session = requests.Session()
+        self.test_images = []
+        self.test_filename = ""
 
     def run_test(self, name, method, endpoint, expected_status, data=None, files=None):
         """Run a single API test"""
