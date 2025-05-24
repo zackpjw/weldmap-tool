@@ -76,87 +76,82 @@ async def analyze_drawing_with_ai(image_base64: str, page_num: int) -> Dict[str,
         
         # Detailed analysis prompt based on the requirements
         analysis_prompt = f"""
-        Analyze this isometric engineering drawing and provide detailed analysis for accurate weld map generation:
+        Analyze this isometric engineering drawing with CRITICAL FOCUS on green-highlighted pipes for weld mapping:
         
-        1. PIPELINE JOINT IDENTIFICATION (CRITICAL FOR WELD MAPPING):
-           - Identify exact coordinates of ALL pipe joints where welding would occur
-           - Look for pipe connections, fittings interfaces, and joint locations
-           - For each joint, provide precise X,Y pixel coordinates
-           - Identify joint types: field joints vs shop joints
+        1. GREEN PIPE IDENTIFICATION (HIGHEST PRIORITY):
+           - Identify ONLY pipes that are highlighted in GREEN color
+           - These green-highlighted pipes are the ONLY ones requiring weld mapping
+           - Ignore all non-green pipes, fittings, and components
+           - Provide exact pixel coordinates for green pipe segments and joints
            
-        2. PIPE SEGMENT ANALYSIS:
-           - Map each straight pipe section with start/end coordinates
-           - Assume 6-meter standard pipe lengths for field weld placement
-           - Calculate intermediate joint positions along pipe runs
-           - Note pipe diameters and orientations
+        2. GREEN PIPE JOINT MAPPING:
+           - For each green-highlighted pipe, identify all weld joint locations
+           - Map start points, end points, and intermediate joints on green pipes
+           - Classify each joint as field_joint or shop_joint based on pipe standards
+           - Provide precise X,Y coordinates for each green pipe joint
            
-        3. FITTING CONNECTION POINTS:
-           - Locate exact connection points for elbows, tees, flanges, reducers
-           - Map where fittings connect to pipe segments
-           - Identify weld joints at fitting interfaces
+        3. GREEN PIPE ROUTING:
+           - Trace the path of each green-highlighted pipe segment
+           - Map centerline coordinates along green pipe runs
+           - Identify connection points where green pipes join fittings or other pipes
+           - Note pipe directions and flow paths for green pipes only
            
-        4. PIPE SUPPORT LOCATIONS:
-           - Find pipe supports labeled with PS-, S- prefixes
-           - Get exact coordinates for support attachment points
-           - Note support types and locations relative to pipe centerlines
+        4. WELD SYMBOL PLACEMENT AREAS:
+           - Identify clear areas NEAR each green pipe for symbol placement
+           - Find spaces within 50-100 pixels of green pipe centerlines
+           - Avoid placing symbols outside the main drawing boundaries
+           - Locate areas that won't overlap with existing drawing elements
            
-        5. COORDINATE MAPPING:
-           - Provide precise pixel coordinates for each weld location
-           - Ensure coordinates point to actual pipeline centerlines
-           - Map pipe routing and flow direction
-           - Identify clear areas for symbol placement (margins, empty spaces)
+        5. GREEN PIPE SPECIFICATIONS:
+           - Extract any visible pipe schedules, diameters for green pipes
+           - Note any special markings on green-highlighted pipes
+           - Map pipe support locations touching green pipes
            
-        Format your response as JSON with exact coordinates for weld positioning:
+        CRITICAL REQUIREMENTS:
+        - ONLY analyze pipes highlighted in GREEN color
+        - Symbols must be placed NEAR the green pipes, not in margins
+        - Arrows must point TO the green pipe centerlines
+        - Ignore all non-green piping components
+        
+        Format response as JSON focusing on green pipes only:
         {{
-            "weld_joints": [
+            "green_pipes": [
                 {{
-                    "id": "joint_1",
-                    "type": "field_joint/shop_joint",
-                    "coords": [precise_x, precise_y],
-                    "pipe_segments": ["pipe_1", "pipe_2"],
-                    "description": "connection description"
-                }}
-            ],
-            "pipes": [
-                {{
-                    "id": "pipe_1",
-                    "start_coords": [x1, y1],
-                    "end_coords": [x2, y2],
-                    "centerline_points": [[x1,y1], [x2,y2], ...],
+                    "id": "green_pipe_1",
+                    "highlighted": true,
+                    "centerline_coords": [[x1,y1], [x2,y2], [x3,y3], ...],
+                    "weld_joints": [
+                        {{
+                            "coords": [x, y],
+                            "type": "field_joint/shop_joint",
+                            "location_on_pipe": "start/middle/end"
+                        }}
+                    ],
                     "diameter": "size_if_visible",
-                    "material": "material_if_visible"
+                    "symbol_placement_areas": [
+                        {{
+                            "coords": [x, y],
+                            "side": "left/right/top/bottom",
+                            "distance_to_pipe": pixels
+                        }}
+                    ]
                 }}
             ],
-            "fittings": [
+            "non_green_pipes": [
                 {{
-                    "id": "fitting_1",
-                    "type": "elbow/tee/flange/reducer",
-                    "center_coords": [x, y],
-                    "connection_points": [[x1,y1], [x2,y2]],
-                    "connected_pipes": ["pipe_1", "pipe_2"]
+                    "id": "regular_pipe_1",
+                    "highlighted": false,
+                    "note": "No weld mapping required"
                 }}
             ],
-            "supports": [
-                {{
-                    "id": "support_1", 
-                    "label": "PS-1 or S-1 etc",
-                    "attachment_coords": [x, y],
-                    "pipe_contact_point": [x, y]
-                }}
-            ],
-            "drawing_analysis": {{
-                "clear_areas": {{
-                    "left_margin": [x1, y1, x2, y2],
-                    "right_margin": [x1, y1, x2, y2],
-                    "top_margin": [x1, y1, x2, y2],
-                    "bottom_margin": [x1, y1, x2, y2]
-                }},
-                "pipe_flow_direction": "direction_if_visible",
-                "scale": "scale_if_visible"
+            "drawing_bounds": {{
+                "width": pixel_width,
+                "height": pixel_height,
+                "drawing_area": [x1, y1, x2, y2]
             }}
         }}
         
-        CRITICAL: Focus on precise coordinate mapping for professional weld map generation. Each weld symbol must point to exact pipeline joint locations.
+        FOCUS: Identify green-highlighted pipes ONLY. All weld mapping applies exclusively to green pipes.
         """
         
         user_message = UserMessage(
