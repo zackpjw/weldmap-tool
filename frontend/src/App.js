@@ -331,6 +331,34 @@ function App() {
             <div className="flex space-x-3">
               {pdfImages.length > 0 && (
                 <>
+                  {/* Zoom Controls */}
+                  <div className="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2">
+                    <button
+                      onClick={zoomOut}
+                      className="px-2 py-1 bg-white rounded hover:bg-gray-50 transition-colors"
+                      title="Zoom Out"
+                    >
+                      🔍-
+                    </button>
+                    <span className="text-sm font-medium text-gray-700 min-w-[60px] text-center">
+                      {Math.round(zoomLevel * 100)}%
+                    </span>
+                    <button
+                      onClick={zoomIn}
+                      className="px-2 py-1 bg-white rounded hover:bg-gray-50 transition-colors"
+                      title="Zoom In"
+                    >
+                      🔍+
+                    </button>
+                    <button
+                      onClick={resetZoom}
+                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
+                      title="Reset Zoom"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  
                   <button
                     onClick={() => setIsDrawingMode(!isDrawingMode)}
                     className={`px-4 py-2 rounded-lg transition-colors ${
