@@ -377,43 +377,10 @@ startxref
             return False
 
 def main():
-    print("🚀 Starting Interactive Weld Mapping Tool API Tests")
-    print("=" * 60)
-    
-    # Setup
+    """Main test execution"""
     tester = WeldMappingAPITester()
-    
-    # Run all tests
-    print("\n📋 Running Backend API Tests...")
-    
-    # Test 1: Health Check
-    tester.test_health_check()
-    
-    # Test 2: Invalid file upload
-    tester.test_pdf_upload_invalid_file()
-    
-    # Test 3: No file upload
-    tester.test_pdf_upload_no_file()
-    
-    # Test 4: Valid PDF upload (main functionality)
-    tester.test_pdf_upload_valid_file()
-    
-    # Test 5: Export annotations
-    tester.test_export_annotations()
-    
-    # Test 6: Invalid endpoint
-    tester.test_invalid_endpoint()
-    
-    # Print final results
-    print("\n" + "=" * 60)
-    print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
-    
-    if tester.tests_passed == tester.tests_run:
-        print("🎉 All backend API tests PASSED!")
-        return 0
-    else:
-        print(f"⚠️  {tester.tests_run - tester.tests_passed} tests FAILED")
-        return 1
+    success = tester.run_all_tests()
+    return 0 if success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
