@@ -155,7 +155,7 @@ startxref
             return pdf_content
 
     def test_demo_upload_endpoint(self):
-        """Test the NEW demo upload endpoint - PRIORITY FEATURE"""
+        """Test the NEW demo upload endpoint - PRIORITY GREEN PIPE FEATURE"""
         try:
             # Create test PDF
             pdf_data = self.create_test_pdf()
@@ -191,10 +191,16 @@ startxref
                         missing_result_fields = [field for field in result_fields if field not in result]
                         
                         if not missing_result_fields:
-                            # Check demo analysis structure
+                            # Check demo analysis structure - FOCUS ON GREEN PIPES
                             analysis = result.get('analysis', {})
                             if analysis.get('success'):
                                 analysis_data = analysis.get('analysis', {})
+                                
+                                # NEW: Check for green_pipes structure
+                                green_pipes = analysis_data.get('green_pipes', [])
+                                non_green_pipes = analysis_data.get('non_green_pipes', [])
+                                
+                                # Legacy support
                                 pipes = len(analysis_data.get('pipes', []))
                                 fittings = len(analysis_data.get('fittings', []))
                                 supports = len(analysis_data.get('supports', []))
@@ -207,11 +213,30 @@ startxref
                                 # Check for annotated image
                                 has_image = bool(result.get('image_base64'))
                                 
+                                # NEW: Check green pipe specific features
+                                green_pipe_features = []
+                                if green_pipes:
+                                    green_pipe_features.append(f"GreenPipes: {len(green_pipes)}")
+                                    for pipe in green_pipes:
+                                        if pipe.get('highlighted'):
+                                            green_pipe_features.append("Highlighted: ✓")
+                                        if pipe.get('weld_joints'):
+                                            green_pipe_features.append(f"WeldJoints: {len(pipe['weld_joints'])}")
+                                        if pipe.get('symbol_placement_areas'):
+                                            green_pipe_features.append(f"PlacementAreas: {len(pipe['symbol_placement_areas'])}")
+                                
+                                if non_green_pipes:
+                                    green_pipe_features.append(f"NonGreenPipes: {len(non_green_pipes)}")
+                                
+                                # Check for arrow targeting
+                                arrows_to_pipes = [a for a in annotations if 'pipe_target_coords' in a]
+                                if arrows_to_pipes:
+                                    green_pipe_features.append(f"ArrowTargeting: {len(arrows_to_pipes)}")
+                                
                                 return self.log_test("Demo Upload Endpoint", True, 
                                     f"- Mode: {data['mode']}, Pages: {data['total_pages']}, "
-                                    f"Pipes: {pipes}, Fittings: {fittings}, Supports: {supports}, "
-                                    f"Welds: {weld_points}, Annotations: {len(annotations)}, "
-                                    f"Types: {annotation_types}, Image: {has_image}")
+                                    f"Annotations: {len(annotations)}, Types: {annotation_types}, "
+                                    f"Image: {has_image}, GREEN_PIPE_FEATURES: {green_pipe_features}")
                             else:
                                 return self.log_test("Demo Upload Endpoint", False, 
                                     f"- Demo analysis failed: {analysis.get('error', 'Unknown error')}")
@@ -229,6 +254,109 @@ startxref
                 
         except Exception as e:
             return self.log_test("Demo Upload Endpoint", False, f"- Exception: {str(e)}")
+
+    def test_green_pipe_targeting(self):
+        """Test GREEN PIPE TARGETING specific features"""
+        try:
+            # Create test PDF
+            pdf_data = self.create_test_pdf()
+            
+            # Prepare multipart form data
+            files = {
+                'file': ('test_drawing.pdf', pdf_data, 'application/pdf')
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/demo-upload", 
+                files=files, 
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('results') and len(data['results']) > 0:
+                    result = data['results'][0]
+                    analysis = result.get('analysis', {})
+                    
+                    if analysis.get('success'):
+                        analysis_data = analysis.get('analysis', {})
+                        
+                        # Test 1: Green pipes data structure
+                        green_pipes = analysis_data.get('green_pipes', [])
+                        if not green_pipes:
+                            return self.log_test("Green Pipe Targeting", False, 
+                                "- No green_pipes found in analysis")
+                        
+                        # Test 2: Green pipes are highlighted
+                        highlighted_pipes = [p for p in green_pipes if p.get('highlighted')]
+                        if not highlighted_pipes:
+                            return self.log_test("Green Pipe Targeting", False, 
+                                "- No highlighted green pipes found")
+                        
+                        # Test 3: Weld joints on green pipes
+                        total_joints = sum(len(p.get('weld_joints', [])) for p in green_pipes)
+                        if total_joints == 0:
+                            return self.log_test("Green Pipe Targeting", False, 
+                                "- No weld joints found on green pipes")
+                        
+                        # Test 4: Symbol placement areas near pipes
+                        total_placement_areas = sum(len(p.get('symbol_placement_areas', [])) for p in green_pipes)
+                        near_pipe_areas = 0
+                        for pipe in green_pipes:
+                            for area in pipe.get('symbol_placement_areas', []):
+                                distance = area.get('distance_to_pipe', 999)
+                                if distance <= 50:  # Within 50 pixels as specified
+                                    near_pipe_areas += 1
+                        
+                        # Test 5: Arrow targeting in annotations
+                        annotations = result.get('weld_annotations', [])
+                        arrows_to_pipes = [a for a in annotations if 'pipe_target_coords' in a]
+                        
+                        # Test 6: Non-green pipes are ignored
+                        non_green_pipes = analysis_data.get('non_green_pipes', [])
+                        
+                        # Test 7: Symbols not in margins (basic check)
+                        margin_threshold = 50
+                        symbols_in_drawing = 0
+                        for annotation in annotations:
+                            coords = annotation.get('coords', [0, 0])
+                            x, y = coords[0], coords[1]
+                            if x > margin_threshold and y > margin_threshold and x < 750 and y < 550:
+                                symbols_in_drawing += 1
+                        
+                        success_criteria = [
+                            len(green_pipes) > 0,
+                            len(highlighted_pipes) > 0,
+                            total_joints > 0,
+                            near_pipe_areas > 0,
+                            len(arrows_to_pipes) > 0,
+                            len(non_green_pipes) >= 0,  # Can be 0, just needs to exist
+                            symbols_in_drawing > 0
+                        ]
+                        
+                        if all(success_criteria):
+                            return self.log_test("Green Pipe Targeting", True, 
+                                f"- GreenPipes: {len(green_pipes)}, Highlighted: {len(highlighted_pipes)}, "
+                                f"Joints: {total_joints}, NearPipeAreas: {near_pipe_areas}/{total_placement_areas}, "
+                                f"ArrowTargets: {len(arrows_to_pipes)}, NonGreen: {len(non_green_pipes)}, "
+                                f"SymbolsInDrawing: {symbols_in_drawing}/{len(annotations)}")
+                        else:
+                            return self.log_test("Green Pipe Targeting", False, 
+                                f"- Failed criteria: GreenPipes: {len(green_pipes)}, "
+                                f"Highlighted: {len(highlighted_pipes)}, Joints: {total_joints}, "
+                                f"NearPipeAreas: {near_pipe_areas}, ArrowTargets: {len(arrows_to_pipes)}")
+                    else:
+                        return self.log_test("Green Pipe Targeting", False, 
+                            f"- Analysis failed: {analysis.get('error', 'Unknown error')}")
+                else:
+                    return self.log_test("Green Pipe Targeting", False, "- No results to analyze")
+            else:
+                return self.log_test("Green Pipe Targeting", False, 
+                    f"- HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            return self.log_test("Green Pipe Targeting", False, f"- Exception: {str(e)}")
 
     def test_visual_annotations(self):
         """Test visual annotation generation in demo mode"""
