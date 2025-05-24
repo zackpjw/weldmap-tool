@@ -590,7 +590,7 @@ function App() {
                   )}
                 </div>
 
-                <div className="relative border-2 border-gray-200 rounded-lg overflow-hidden">
+                <div className="relative border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                   <canvas
                     ref={canvasRef}
                     width={800}
@@ -599,38 +599,137 @@ function App() {
                     onClick={handleCanvasClick}
                     onDragOver={handleCanvasDragOver}
                     onDrop={handleCanvasDrop}
+                    onWheel={handleWheel}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
                     style={{
                       backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
-                      backgroundSize: 'contain',
+                      backgroundSize: `${100 * zoomLevel}%`,
                       backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'center',
-                      cursor: isDrawingMode ? 'crosshair' : 'pointer'
+                      backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
+                      cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer',
+                      transform: `scale(${zoomLevel})`,
+                      transformOrigin: 'top left'
                     }}
                   />
                   
-                  {/* Render placed symbols */}
-                  {currentPageSymbols.map((symbol) => (
-                    <div
-                      key={symbol.id}
-                      className="absolute cursor-move hover:scale-110 transition-transform"
-                      style={{
-                        left: symbol.x - 15,
-                        top: symbol.y - 15,
-                        color: symbolTypes[symbol.type].color,
-                        fontSize: '24px',
-                        fontWeight: 'bold',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                        zIndex: 10
-                      }}
-                      draggable
-                      onDragStart={(e) => handleSymbolDragStart(e, symbol.id)}
-                      onDragEnd={handleSymbolDragEnd}
-                      onDoubleClick={() => removeSymbol(symbol.id)}
-                      title={`${symbolTypes[symbol.type].name} - Double-click to remove`}
-                    >
-                      {symbolTypes[symbol.type].shape}
-                    </div>
-                  ))}
+                  {/* Render placed symbols with zoom scaling */}
+                  {currentPageSymbols.map((symbol) => {
+                    // Create custom SVG symbols for proper shapes and sizes
+                    const renderSymbol = (type) => {
+                      const size = 25; // Larger size as requested
+                      const strokeWidth = 3;
+                      const color = symbolTypes[type].color;
+                      
+                      switch (type) {
+                        case 'field_weld':
+                          // Rotated square (45 degrees)
+                          return (
+                            <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
+                              <rect 
+                                x={size / 2} 
+                                y={size / 2} 
+                                width={size} 
+                                height={size} 
+                                fill="none" 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                            </svg>
+                          );
+                        case 'shop_weld':
+                          // Circle
+                          return (
+                            <svg width={size * 2} height={size * 2}>
+                              <circle 
+                                cx={size} 
+                                cy={size} 
+                                r={size / 2} 
+                                fill="none" 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                            </svg>
+                          );
+                        case 'pipe_section':
+                          // Rounded rectangle
+                          return (
+                            <svg width={size * 2} height={size}>
+                              <rect 
+                                x={strokeWidth / 2} 
+                                y={strokeWidth / 2} 
+                                width={size * 2 - strokeWidth} 
+                                height={size - strokeWidth} 
+                                rx={8} 
+                                ry={8} 
+                                fill="none" 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                            </svg>
+                          );
+                        case 'pipe_support':
+                          // Rectangle (not rounded)
+                          return (
+                            <svg width={size * 2} height={size}>
+                              <rect 
+                                x={strokeWidth / 2} 
+                                y={strokeWidth / 2} 
+                                width={size * 2 - strokeWidth} 
+                                height={size - strokeWidth} 
+                                fill="none" 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                            </svg>
+                          );
+                        case 'flange_joint':
+                          // Hexagon rotated 45 degrees with center line
+                          return (
+                            <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
+                              <polygon 
+                                points={`${size + size/2 * Math.cos(0)},${size + size/2 * Math.sin(0)} ${size + size/2 * Math.cos(Math.PI/3)},${size + size/2 * Math.sin(Math.PI/3)} ${size + size/2 * Math.cos(2*Math.PI/3)},${size + size/2 * Math.sin(2*Math.PI/3)} ${size + size/2 * Math.cos(Math.PI)},${size + size/2 * Math.sin(Math.PI)} ${size + size/2 * Math.cos(4*Math.PI/3)},${size + size/2 * Math.sin(4*Math.PI/3)} ${size + size/2 * Math.cos(5*Math.PI/3)},${size + size/2 * Math.sin(5*Math.PI/3)}`}
+                                fill="none" 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                              <line 
+                                x1={size - size/2} 
+                                y1={size} 
+                                x2={size + size/2} 
+                                y2={size} 
+                                stroke={color} 
+                                strokeWidth={strokeWidth}
+                              />
+                            </svg>
+                          );
+                        default:
+                          return null;
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={symbol.id}
+                        className="absolute cursor-move hover:scale-110 transition-transform"
+                        style={{
+                          left: symbol.x * zoomLevel + panOffset.x - 25,
+                          top: symbol.y * zoomLevel + panOffset.y - 25,
+                          zIndex: 10,
+                          pointerEvents: 'auto'
+                        }}
+                        draggable
+                        onDragStart={(e) => handleSymbolDragStart(e, symbol.id)}
+                        onDragEnd={handleSymbolDragEnd}
+                        onDoubleClick={() => removeSymbol(symbol.id)}
+                        title={`${symbolTypes[symbol.type].name} - Double-click to remove`}
+                      >
+                        {renderSymbol(symbol.type)}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="mt-4 text-sm text-gray-600">
