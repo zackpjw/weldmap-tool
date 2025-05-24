@@ -176,8 +176,13 @@ async def export_pdf(project_data: dict):
                 if symbol_type == 'field_weld':
                     # Diamond
                     size = 10
-                    pdf_canvas.polygon([(x, y+size), (x+size, y), (x, y-size), (x-size, y)], 
-                                     stroke=1, fill=0)
+                    points = [(x, y+size), (x+size, y), (x, y-size), (x-size, y)]
+                    path = pdf_canvas.beginPath()
+                    path.moveTo(points[0][0], points[0][1])
+                    for point in points[1:]:
+                        path.lineTo(point[0], point[1])
+                    path.close()
+                    pdf_canvas.drawPath(path, stroke=1, fill=0)
                 elif symbol_type == 'shop_weld':
                     # Circle
                     pdf_canvas.circle(x, y, 8, stroke=1, fill=0)
@@ -196,7 +201,15 @@ async def export_pdf(project_data: dict):
                         px = x + size * math.cos(angle)
                         py = y + size * math.sin(angle)
                         hex_points.append((px, py))
-                    pdf_canvas.polygon(hex_points, stroke=1, fill=0)
+                    
+                    # Draw hexagon using path
+                    path = pdf_canvas.beginPath()
+                    path.moveTo(hex_points[0][0], hex_points[0][1])
+                    for point in hex_points[1:]:
+                        path.lineTo(point[0], point[1])
+                    path.close()
+                    pdf_canvas.drawPath(path, stroke=1, fill=0)
+                    
                     # Line through center
                     pdf_canvas.line(x-size, y, x+size, y)
             
