@@ -13,6 +13,11 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedSymbol, setDraggedSymbol] = useState(null);
   const [selectedSymbolType, setSelectedSymbolType] = useState('field_weld');
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [savedProjects, setSavedProjects] = useState([]);
+  const [projectName, setProjectName] = useState('');
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showLoadDialog, setShowLoadDialog] = useState(false);
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
