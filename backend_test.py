@@ -154,8 +154,144 @@ startxref
 %%EOF"""
             return pdf_content
 
+    def test_demo_upload_endpoint(self):
+        """Test the NEW demo upload endpoint - PRIORITY FEATURE"""
+        try:
+            # Create test PDF
+            pdf_data = self.create_test_pdf()
+            
+            # Prepare multipart form data
+            files = {
+                'file': ('test_drawing.pdf', pdf_data, 'application/pdf')
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/demo-upload", 
+                files=files, 
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check response structure for demo mode
+                required_fields = ['success', 'file_id', 'filename', 'total_pages', 'results', 'mode']
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    # Verify it's demo mode
+                    if data.get('mode') != 'demo':
+                        return self.log_test("Demo Upload Endpoint", False, 
+                            f"- Expected mode 'demo', got '{data.get('mode')}'")
+                    
+                    # Check if results have proper structure
+                    if data.get('results') and len(data['results']) > 0:
+                        result = data['results'][0]
+                        result_fields = ['page', 'analysis', 'weld_annotations', 'processed', 'mode', 'image_base64']
+                        missing_result_fields = [field for field in result_fields if field not in result]
+                        
+                        if not missing_result_fields:
+                            # Check demo analysis structure
+                            analysis = result.get('analysis', {})
+                            if analysis.get('success'):
+                                analysis_data = analysis.get('analysis', {})
+                                pipes = len(analysis_data.get('pipes', []))
+                                fittings = len(analysis_data.get('fittings', []))
+                                supports = len(analysis_data.get('supports', []))
+                                weld_points = len(analysis_data.get('weld_points', []))
+                                
+                                # Check weld annotations
+                                annotations = result.get('weld_annotations', [])
+                                annotation_types = set(ann.get('type') for ann in annotations)
+                                
+                                # Check for annotated image
+                                has_image = bool(result.get('image_base64'))
+                                
+                                return self.log_test("Demo Upload Endpoint", True, 
+                                    f"- Mode: {data['mode']}, Pages: {data['total_pages']}, "
+                                    f"Pipes: {pipes}, Fittings: {fittings}, Supports: {supports}, "
+                                    f"Welds: {weld_points}, Annotations: {len(annotations)}, "
+                                    f"Types: {annotation_types}, Image: {has_image}")
+                            else:
+                                return self.log_test("Demo Upload Endpoint", False, 
+                                    f"- Demo analysis failed: {analysis.get('error', 'Unknown error')}")
+                        else:
+                            return self.log_test("Demo Upload Endpoint", False, 
+                                f"- Missing result fields: {missing_result_fields}")
+                    else:
+                        return self.log_test("Demo Upload Endpoint", False, "- No results in response")
+                else:
+                    return self.log_test("Demo Upload Endpoint", False, f"- Missing fields: {missing_fields}")
+                    
+            else:
+                return self.log_test("Demo Upload Endpoint", False, 
+                    f"- HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            return self.log_test("Demo Upload Endpoint", False, f"- Exception: {str(e)}")
+
+    def test_visual_annotations(self):
+        """Test visual annotation generation in demo mode"""
+        try:
+            # Create test PDF
+            pdf_data = self.create_test_pdf()
+            
+            # Prepare multipart form data
+            files = {
+                'file': ('test_drawing.pdf', pdf_data, 'application/pdf')
+            }
+            
+            response = self.session.post(
+                f"{self.base_url}/api/demo-upload", 
+                files=files, 
+                timeout=60
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get('results') and len(data['results']) > 0:
+                    result = data['results'][0]
+                    annotations = result.get('weld_annotations', [])
+                    
+                    # Check for different annotation types and shapes
+                    expected_types = {'field_weld', 'shop_weld', 'pipe_section', 'pipe_support'}
+                    expected_shapes = {'diamond', 'circle', 'pill', 'rectangle'}
+                    
+                    found_types = set(ann.get('type') for ann in annotations)
+                    found_shapes = set(ann.get('shape') for ann in annotations)
+                    
+                    # Check if we have the expected variety
+                    type_coverage = len(found_types.intersection(expected_types))
+                    shape_coverage = len(found_shapes.intersection(expected_shapes))
+                    
+                    # Check coordinate validity
+                    valid_coords = all(
+                        isinstance(ann.get('coords'), list) and 
+                        len(ann.get('coords', [])) == 2 and
+                        all(isinstance(coord, (int, float)) for coord in ann.get('coords', []))
+                        for ann in annotations
+                    )
+                    
+                    if type_coverage >= 3 and shape_coverage >= 3 and valid_coords:
+                        return self.log_test("Visual Annotations", True, 
+                            f"- Types: {found_types}, Shapes: {found_shapes}, "
+                            f"Count: {len(annotations)}, Valid coords: {valid_coords}")
+                    else:
+                        return self.log_test("Visual Annotations", False, 
+                            f"- Insufficient variety or invalid coords. Types: {found_types}, "
+                            f"Shapes: {found_shapes}, Valid coords: {valid_coords}")
+                else:
+                    return self.log_test("Visual Annotations", False, "- No results to check annotations")
+            else:
+                return self.log_test("Visual Annotations", False, 
+                    f"- HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            return self.log_test("Visual Annotations", False, f"- Exception: {str(e)}")
+
     def test_pdf_upload_structure(self):
-        """Test PDF upload endpoint structure (without expecting AI to work due to quota)"""
+        """Test PDF upload endpoint structure (AI mode)"""
         try:
             # Create test PDF
             pdf_data = self.create_test_pdf()
@@ -186,15 +322,15 @@ startxref
                         missing_result_fields = [field for field in result_fields if field not in result]
                         
                         if not missing_result_fields:
-                            return self.log_test("PDF Upload Structure", True, 
+                            return self.log_test("AI Upload Structure", True, 
                                 f"- File: {data['filename']}, Pages: {data['total_pages']}, Results: {len(data['results'])}")
                         else:
-                            return self.log_test("PDF Upload Structure", False, 
+                            return self.log_test("AI Upload Structure", False, 
                                 f"- Missing result fields: {missing_result_fields}")
                     else:
-                        return self.log_test("PDF Upload Structure", False, "- No results in response")
+                        return self.log_test("AI Upload Structure", False, "- No results in response")
                 else:
-                    return self.log_test("PDF Upload Structure", False, f"- Missing fields: {missing_fields}")
+                    return self.log_test("AI Upload Structure", False, f"- Missing fields: {missing_fields}")
                     
             elif response.status_code == 500:
                 # Check if it's an expected AI quota error
@@ -202,20 +338,20 @@ startxref
                     error_data = response.json()
                     error_detail = error_data.get('detail', '')
                     if 'quota' in error_detail.lower() or 'rate limit' in error_detail.lower():
-                        return self.log_test("PDF Upload Structure", True, 
+                        return self.log_test("AI Upload Structure", True, 
                             f"- Expected AI quota error in processing: {error_detail}")
                     else:
-                        return self.log_test("PDF Upload Structure", False, 
+                        return self.log_test("AI Upload Structure", False, 
                             f"- Unexpected server error: {error_detail}")
                 except:
-                    return self.log_test("PDF Upload Structure", False, 
+                    return self.log_test("AI Upload Structure", False, 
                         f"- Server error: {response.text}")
             else:
-                return self.log_test("PDF Upload Structure", False, 
+                return self.log_test("AI Upload Structure", False, 
                     f"- HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            return self.log_test("PDF Upload Structure", False, f"- Exception: {str(e)}")
+            return self.log_test("AI Upload Structure", False, f"- Exception: {str(e)}")
 
     def test_invalid_file_upload(self):
         """Test upload with invalid file type"""
