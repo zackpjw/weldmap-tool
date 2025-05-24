@@ -547,10 +547,91 @@ function App() {
 
                 <div className="mt-4 text-sm text-gray-600">
                   <p>
-                    <strong>Selected:</strong> {symbolTypes[selectedSymbolType].name} - 
-                    Click anywhere on the drawing to place symbols
+                    <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Save Project Dialog */}
+        {showSaveDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96">
+              <h3 className="text-lg font-semibold mb-4">Save Project</h3>
+              <input
+                type="text"
+                placeholder="Enter project name"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded mb-4"
+              />
+              <div className="flex space-x-3">
+                <button
+                  onClick={saveProject}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowSaveDialog(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Load Project Dialog */}
+        {showLoadDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">Load Project</h3>
+              {savedProjects.length === 0 ? (
+                <p className="text-gray-600">No saved projects found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {savedProjects.map((project) => (
+                    <div key={project.id} className="border border-gray-200 rounded p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{project.name}</p>
+                          <p className="text-sm text-gray-600">
+                            {project.filename} • {new Date(project.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {project.symbols?.length || 0} symbols
+                          </p>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => loadProject(project)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                          >
+                            Load
+                          </button>
+                          <button
+                            onClick={() => deleteProject(project.id)}
+                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-4">
+                <button
+                  onClick={() => setShowLoadDialog(false)}
+                  className="w-full bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
