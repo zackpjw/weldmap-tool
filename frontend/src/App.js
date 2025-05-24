@@ -242,6 +242,11 @@ function App() {
     );
   }, [draggedSymbol, zoomLevel, panOffset]);
 
+  const removeSymbol = (symbolId) => {
+    setPlacedSymbols(prev => prev.filter(symbol => symbol.id !== symbolId));
+    setSelectedSymbolId(null);
+  };
+
   const clearAllSymbols = () => {
     setPlacedSymbols([]);
     setSelectedSymbolId(null);
