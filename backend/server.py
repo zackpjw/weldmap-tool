@@ -76,39 +76,53 @@ async def analyze_drawing_with_ai(image_base64: str, page_num: int) -> Dict[str,
         
         # Detailed analysis prompt based on the requirements
         analysis_prompt = f"""
-        Analyze this isometric engineering drawing and provide detailed analysis:
+        Analyze this isometric engineering drawing and provide detailed analysis for accurate weld map generation:
         
-        1. COMPONENT IDENTIFICATION:
-           - Identify all straight pipe sections with approximate coordinates
-           - Locate pipe fittings: elbows, tees, flanges, reducers with positions
-           - Find pipe supports (look for labels starting with PS-, S-) with coordinates
+        1. PIPELINE JOINT IDENTIFICATION (CRITICAL FOR WELD MAPPING):
+           - Identify exact coordinates of ALL pipe joints where welding would occur
+           - Look for pipe connections, fittings interfaces, and joint locations
+           - For each joint, provide precise X,Y pixel coordinates
+           - Identify joint types: field joints vs shop joints
            
-        2. PIPE ANALYSIS:
-           - Assume pipes are 6 meters in length by default
-           - Identify pipe segments and their connections
-           - Note any dimension markings visible
+        2. PIPE SEGMENT ANALYSIS:
+           - Map each straight pipe section with start/end coordinates
+           - Assume 6-meter standard pipe lengths for field weld placement
+           - Calculate intermediate joint positions along pipe runs
+           - Note pipe diameters and orientations
            
-        3. WELD POINT DETECTION:
-           - Identify all pipe joints where welding would be required
-           - Look for existing weld symbols or joint indicators
-           - Classify joints as either field joints or shop joints
+        3. FITTING CONNECTION POINTS:
+           - Locate exact connection points for elbows, tees, flanges, reducers
+           - Map where fittings connect to pipe segments
+           - Identify weld joints at fitting interfaces
            
-        4. COORDINATE EXTRACTION:
-           - Provide approximate X,Y pixel coordinates for each component
-           - Note any grid references or elevation markers
-           - Identify component relationships and connections
+        4. PIPE SUPPORT LOCATIONS:
+           - Find pipe supports labeled with PS-, S- prefixes
+           - Get exact coordinates for support attachment points
+           - Note support types and locations relative to pipe centerlines
            
-        5. COMPONENT SPECIFICATIONS:
-           - Extract any visible pipe schedules, diameters, or materials
-           - Note any special markings or annotations
+        5. COORDINATE MAPPING:
+           - Provide precise pixel coordinates for each weld location
+           - Ensure coordinates point to actual pipeline centerlines
+           - Map pipe routing and flow direction
+           - Identify clear areas for symbol placement (margins, empty spaces)
            
-        Please format your response as a structured JSON with the following format:
+        Format your response as JSON with exact coordinates for weld positioning:
         {{
+            "weld_joints": [
+                {{
+                    "id": "joint_1",
+                    "type": "field_joint/shop_joint",
+                    "coords": [precise_x, precise_y],
+                    "pipe_segments": ["pipe_1", "pipe_2"],
+                    "description": "connection description"
+                }}
+            ],
             "pipes": [
                 {{
                     "id": "pipe_1",
                     "start_coords": [x1, y1],
                     "end_coords": [x2, y2],
+                    "centerline_points": [[x1,y1], [x2,y2], ...],
                     "diameter": "size_if_visible",
                     "material": "material_if_visible"
                 }}
@@ -117,32 +131,32 @@ async def analyze_drawing_with_ai(image_base64: str, page_num: int) -> Dict[str,
                 {{
                     "id": "fitting_1",
                     "type": "elbow/tee/flange/reducer",
-                    "coords": [x, y],
-                    "connections": ["pipe_1", "pipe_2"]
+                    "center_coords": [x, y],
+                    "connection_points": [[x1,y1], [x2,y2]],
+                    "connected_pipes": ["pipe_1", "pipe_2"]
                 }}
             ],
             "supports": [
                 {{
-                    "id": "support_1",
+                    "id": "support_1", 
                     "label": "PS-1 or S-1 etc",
-                    "coords": [x, y],
-                    "type": "pipe_support"
+                    "attachment_coords": [x, y],
+                    "pipe_contact_point": [x, y]
                 }}
             ],
-            "weld_points": [
-                {{
-                    "id": "weld_1",
-                    "coords": [x, y],
-                    "type": "field_joint/shop_joint",
-                    "connected_components": ["pipe_1", "fitting_1"]
-                }}
-            ],
-            "drawing_info": {{
-                "scale": "if_visible",
-                "title": "drawing_title_if_visible",
-                "dimensions": "overall_drawing_dimensions"
+            "drawing_analysis": {{
+                "clear_areas": {{
+                    "left_margin": [x1, y1, x2, y2],
+                    "right_margin": [x1, y1, x2, y2],
+                    "top_margin": [x1, y1, x2, y2],
+                    "bottom_margin": [x1, y1, x2, y2]
+                }},
+                "pipe_flow_direction": "direction_if_visible",
+                "scale": "scale_if_visible"
             }}
         }}
+        
+        CRITICAL: Focus on precise coordinate mapping for professional weld map generation. Each weld symbol must point to exact pipeline joint locations.
         """
         
         user_message = UserMessage(
