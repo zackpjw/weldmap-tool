@@ -33,7 +33,7 @@ function App() {
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (demoMode = false) => {
     if (!selectedFile) {
       setError('Please select a PDF file first');
       return;
@@ -47,7 +47,8 @@ function App() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      const response = await fetch(`${API_BASE_URL}/api/upload-pdf`, {
+      const endpoint = demoMode ? '/api/demo-upload' : '/api/upload-pdf';
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         body: formData,
       });
