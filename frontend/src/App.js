@@ -556,11 +556,13 @@ function App() {
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Select symbol type</li>
                     <li>• Click on drawing to place</li>
+                    <li>• <strong>Symbols can overlap</strong> freely</li>
                     <li>• Click symbol to select</li>
                     <li>• Drag symbols to move</li>
                     <li>• Delete/Backspace to remove selected</li>
                     <li>• Use zoom controls or scroll wheel</li>
                     <li>• Ctrl+click to pan drawing</li>
+                    <li>• 🆕 New Project to start fresh</li>
                   </ul>
                 </div>
 
