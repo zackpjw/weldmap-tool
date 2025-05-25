@@ -28,13 +28,13 @@ function App() {
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Weld symbol types with updated shapes and descriptions
+  // Weld symbol types with proper SVG shapes and descriptions
   const symbolTypes = {
-    field_weld: { name: 'Field Weld', shape: '⧫', color: '#0066FF', description: 'Rotated Square - Field welds' },
-    shop_weld: { name: 'Shop Weld', shape: '●', color: '#0066FF', description: 'Circle - Shop welds' },
-    pipe_section: { name: 'Pipe Section', shape: '▬', color: '#0066FF', description: 'Rounded Rectangle - Pipe sections' },
-    pipe_support: { name: 'Pipe Support', shape: '▬', color: '#FF0000', description: 'Rectangle - Pipe supports' },
-    flange_joint: { name: 'Flange Joint', shape: '⬢', color: '#0066FF', description: 'Rotated Hexagon - Flange joints' }
+    field_weld: { name: 'Field Weld', shape: '◊', color: '#0066FF', description: 'Diamond - Field welds' },
+    shop_weld: { name: 'Shop Weld', shape: '○', color: '#0066FF', description: 'Circle - Shop welds' },
+    pipe_section: { name: 'Pipe Section', shape: '▭', color: '#0066FF', description: 'Rectangle - Pipe sections' },
+    pipe_support: { name: 'Pipe Support', shape: '▭', color: '#FF0000', description: 'Rectangle - Pipe supports' },
+    flange_joint: { name: 'Flange Joint', shape: '⬡', color: '#0066FF', description: 'Hexagon - Flange joints' }
   };
 
   // Zoom functionality
