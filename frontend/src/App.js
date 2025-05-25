@@ -635,11 +635,12 @@ function App() {
                       }}
                     />
                     
-                    {/* Render placed symbols with zoom scaling */}
+                    {/* Render placed symbols with zoom scaling and proper outlines */}
                     {currentPageSymbols.map((symbol) => {
                       const symbolConfig = symbolTypes[symbol.type];
                       const scaledX = symbol.x * zoomLevel + panOffset.x;
                       const scaledY = symbol.y * zoomLevel + panOffset.y;
+                      const symbolSize = 29 * zoomLevel; // 20% larger than original 24px
                       
                       return (
                         <div
@@ -648,12 +649,15 @@ function App() {
                             selectedSymbolId === symbol.id ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 rounded' : ''
                           }`}
                           style={{
-                            left: `${scaledX - 15}px`,
-                            top: `${scaledY - 15}px`,
-                            fontSize: `${24 * zoomLevel}px`,
-                            color: symbolConfig.color,
-                            textShadow: '1px 1px 2px rgba(0,0,0,0.3)',
-                            zIndex: selectedSymbolId === symbol.id ? 10 : 5
+                            left: `${scaledX - 18}px`, // Adjusted for larger size
+                            top: `${scaledY - 18}px`,
+                            fontSize: `${symbolSize}px`,
+                            color: 'transparent',
+                            WebkitTextStroke: `2px ${symbolConfig.color}`, // Outline only
+                            textStroke: `2px ${symbolConfig.color}`,
+                            fontWeight: 'bold',
+                            zIndex: selectedSymbolId === symbol.id ? 10 : 5,
+                            filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
                           }}
                         >
                           {symbolConfig.shape}
