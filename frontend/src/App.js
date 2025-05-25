@@ -838,7 +838,13 @@ function App() {
                         switch (annotation.type) {
                           case 'field_weld': // Diamond
                             return (
-                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                left: -uniformSize/2, 
+                                top: -uniformSize/2,
+                                margin: 0,
+                                padding: 0,
+                                border: 'none'
+                              }}>
                                 <polygon
                                   points={`${uniformSize/2},${(uniformSize-uniformSize*0.8)/2} ${uniformSize-(uniformSize-uniformSize*0.8)/2},${uniformSize/2} ${uniformSize/2},${uniformSize-(uniformSize-uniformSize*0.8)/2} ${(uniformSize-uniformSize*0.8)/2},${uniformSize/2}`}
                                   fill="none"
