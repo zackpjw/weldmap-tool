@@ -799,8 +799,8 @@ function App() {
                             );
                             
                           case 'pipe_section': // Blue rectangle with rounded corners
-                            const blueWidth = baseSize * 1.2; // 20% wider
-                            const blueHeight = baseSize * 1.1; // 10% taller
+                            const blueWidth = baseSize * 1.4; // 40% wider (20% + 20% more)
+                            const blueHeight = baseSize * 0.55; // 50% of current height
                             const borderRadius = 10;
                             return (
                               <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
@@ -820,8 +820,8 @@ function App() {
                             );
                             
                           case 'pipe_support': // Red rectangle (sharp corners)
-                            const redWidth = baseSize * 1.2; // 20% wider
-                            const redHeight = baseSize * 1.1; // 10% taller
+                            const redWidth = baseSize * 1.4; // 40% wider (20% + 20% more)
+                            const redHeight = baseSize * 0.55; // 50% of current height
                             return (
                               <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
                                 <rect
@@ -837,8 +837,8 @@ function App() {
                               </svg>
                             );
                             
-                          case 'flange_joint': // Hexagon
-                            const hexSize = baseSize * 0.7;
+                          case 'flange_joint': // Hexagon with horizontal line inside
+                            const hexSize = baseSize * 0.77; // 10% larger than previous (0.7 * 1.1)
                             const hexPoints = [];
                             for (let i = 0; i < 6; i++) {
                               const angle = (i * Math.PI) / 3;
@@ -848,9 +848,20 @@ function App() {
                             }
                             return (
                               <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                {/* Hexagon outline */}
                                 <polygon
                                   points={hexPoints.join(' ')}
                                   fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                                {/* Horizontal line inside hexagon */}
+                                <line
+                                  x1={baseSize/2 - hexSize/3}
+                                  y1={baseSize/2}
+                                  x2={baseSize/2 + hexSize/3}
+                                  y2={baseSize/2}
                                   stroke={symbolConfig.color}
                                   strokeWidth={strokeWidth}
                                   className={isSelected ? 'opacity-100' : 'opacity-90'}
