@@ -459,16 +459,31 @@ function App() {
   // Export functionality
   const exportPDF = async () => {
     try {
+      // Get actual canvas dimensions for accurate coordinate transformation
+      const canvas = canvasRef.current;
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      // Prepare data with accurate coordinate information
+      const exportData = {
+        symbols: placedSymbols,
+        images: pdfImages,
+        filename: 'weld_mapping',
+        canvasInfo: {
+          width: canvas.width,
+          height: canvas.height,
+          displayWidth: canvasRect.width,
+          displayHeight: canvasRect.height,
+          zoomLevel: zoomLevel,
+          panOffset: panOffset
+        }
+      };
+
       const response = await fetch(`${API_BASE_URL}/api/export-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          symbols: placedSymbols,
-          images: pdfImages,
-          filename: 'weld_mapping'
-        }),
+        body: JSON.stringify(exportData),
       });
 
       if (!response.ok) {
