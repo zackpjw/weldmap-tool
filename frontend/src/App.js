@@ -24,6 +24,7 @@ function App() {
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [selectedSymbolId, setSelectedSymbolId] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isMouseOverPDF, setIsMouseOverPDF] = useState(false);
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
