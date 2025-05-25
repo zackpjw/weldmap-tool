@@ -206,8 +206,8 @@ function App() {
     switch (shapeType) {
       case 'pipe_section': // Blue rectangle with rounded edges
       case 'pipe_support': // Red rectangle
-        const width = shapeSize * 1.2; // 20% wider
-        const height = shapeSize * 1.1; // 10% taller
+        const width = shapeSize * 1.4; // 40% wider than base (20% + 20% more)
+        const height = shapeSize * 0.55; // 50% of original height (1.1 * 0.5)
         
         if (Math.abs(dx) > Math.abs(dy)) {
           // Horizontal line - connect to left or right side
@@ -218,6 +218,12 @@ function App() {
           offsetX = 0;
           offsetY = dy > 0 ? -height/2 : height/2;
         }
+        break;
+        
+      case 'flange_joint': // Hexagon - connect closer to edge
+        const hexRadius = (shapeSize * 0.77) / 2; // 10% larger hexagon radius
+        offsetX = -Math.cos(angle) * hexRadius;
+        offsetY = -Math.sin(angle) * hexRadius;
         break;
         
       default: // Circular/diamond shapes
