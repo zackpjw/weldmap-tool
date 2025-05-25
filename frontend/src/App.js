@@ -431,9 +431,18 @@ function App() {
         {/* Upload Section */}
         {pdfImages.length === 0 && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">
-              Upload Isometric Drawing (PDF)
-            </h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-800">
+                Upload Isometric Drawing (PDF)
+              </h2>
+              {/* Show New Project button even when no PDF loaded for convenience */}
+              <button
+                onClick={startNewProject}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              >
+                🆕 New Project
+              </button>
+            </div>
             
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
               <input
