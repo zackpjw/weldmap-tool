@@ -687,13 +687,13 @@ function App() {
                       onDrop={handleCanvasDrop}
                       onMouseDown={handleMouseDown}
                       onMouseMove={handleMouseMove}
-                      onMouseUp={handleMouseUp}
+                      onMouseUp={handleCanvasMouseUp}
                       style={{
                         backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
                         backgroundSize: `${100 * zoomLevel}%`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
-                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer'
+                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : isDrawingLine ? 'crosshair' : 'pointer'
                       }}
                     />
                     
