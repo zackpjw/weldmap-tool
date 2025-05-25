@@ -104,22 +104,38 @@
 
 # Interactive Weld Mapping Tool - Test Results
 
-## Current Status: ✅ FIXED - PDF Upload Working
+## Current Status: ✅ ENHANCED - Line Drawing System Implemented
 
-### Issue Found & Resolved:
-**Problem**: PDF upload was failing with 404 errors
-**Root Cause**: API endpoint mismatch between frontend and backend
-- Frontend was calling: `/api/upload` 
-- Backend actually has: `/api/upload-pdf-only`
+### Major Feature Update: Click-and-Drag Line Drawing System
 
-**Solution Applied**:
-1. ✅ Updated frontend to use correct endpoint `/api/upload-pdf-only`
-2. ✅ Updated export endpoint from `/api/export` to `/api/export-pdf` 
-3. ✅ Verified backend health check working
-4. ✅ Frontend compiling successfully
-5. ✅ All services running properly
+**New Functionality**:
+1. ✅ **Click-and-Drag Interface**: Users click and drag to draw lines from start to end point
+2. ✅ **Symbol at Line End**: Weld symbol automatically appears at the end of each drawn line
+3. ✅ **Real-time Preview**: Dashed line and preview symbol shown while dragging
+4. ✅ **Connected Annotations**: Each annotation consists of both a line and a symbol
 
-### Backend API Endpoints Available:
+**Previous Issues Fixed**:
+1. ✅ **Shape Outlines**: All symbols now have colored outlines (no fill)
+2. ✅ **20% Larger Symbols**: Increased size from 24px to 29px for better visibility
+3. ✅ **Export Button Always Visible**: Now shows when PDF is loaded (not just when symbols exist)
+4. ✅ **Click Detection Fixed**: Proper logic for selecting existing annotations
+
+### New Interaction Model:
+- **Select Symbol Type**: Choose from 5 weld symbol types in palette
+- **Draw Line**: Click and drag on PDF to draw annotation line
+- **Symbol Placement**: Weld symbol automatically placed at line end
+- **Visual Feedback**: Real-time preview with dashed line during drawing
+- **Selection**: Click existing annotations to select them
+- **Removal**: Remove mode or Delete/Backspace key to remove annotations
+
+### Technical Implementation:
+- ✅ **SVG Line Rendering**: Lines drawn with SVG for crisp display at all zoom levels
+- ✅ **Dual Data Structure**: Supports both old format (x,y) and new format (lineStart, lineEnd, symbolPosition)
+- ✅ **Zoom Integration**: Lines and symbols scale properly with zoom level
+- ✅ **Preview System**: Live preview during drawing with dashed lines
+- ✅ **Enhanced UI**: Updated terminology from "symbols" to "annotations"
+
+### Backend API Endpoints (Working):
 - ✅ `GET /api/health` - Health check
 - ✅ `POST /api/upload-pdf-only` - PDF upload and conversion
 - ✅ `POST /api/export-pdf` - Export annotated PDF
@@ -132,15 +148,14 @@
 - ✅ **API Connection**: Frontend correctly configured with backend URL
 
 ### Features Implemented & Working:
-1. ✅ **Independent Zoom/Scroll**: Zoom only works when mouse is over PDF area
-2. ✅ **Optimized Layout**: 50px navbar, expanded workspace, proper component arrangement
-3. ✅ **Symbol Palette**: Above PDF editor as requested
-4. ✅ **Right Panel**: Current page symbols with matching height
-5. ✅ **PDF Upload**: Now using correct API endpoint
-6. ✅ **PDF Export**: Updated to use correct backend endpoint
-7. ✅ **All Weld Symbols**: Field weld, shop weld, pipe section, pipe support, flange joint
-8. ✅ **Project Management**: Save/load functionality
-9. ✅ **Interactive Features**: Symbol placement, selection, removal
+1. ✅ **Line Drawing System**: Click-drag interface for creating line annotations
+2. ✅ **Symbol Outlines**: Colored outlines, 20% larger, better visibility
+3. ✅ **Real-time Preview**: Dashed line preview while drawing
+4. ✅ **Independent Zoom/Scroll**: Zoom only works when mouse is over PDF area
+5. ✅ **Optimized Layout**: 50px navbar, expanded workspace, proper component arrangement
+6. ✅ **Export Functionality**: Always available when PDF is loaded
+7. ✅ **Project Management**: Save/load functionality with new annotation format
+8. ✅ **Enhanced UI**: Updated instructions and feedback for line drawing workflow
 
 ### Test Status: READY FOR USER TESTING
-The application is now fully functional and ready for use. PDF upload should work correctly.
+The Interactive Weld Mapping Tool now features a professional line-drawing annotation system that matches real-world welding documentation workflows.
