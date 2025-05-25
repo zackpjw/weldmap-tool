@@ -858,7 +858,13 @@ function App() {
                           case 'shop_weld': // Circle - same size as diamond
                             const radius = uniformSize * 0.35;
                             return (
-                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                left: -uniformSize/2, 
+                                top: -uniformSize/2,
+                                margin: 0,
+                                padding: 0,
+                                border: 'none'
+                              }}>
                                 <circle
                                   cx={uniformSize/2}
                                   cy={uniformSize/2}
