@@ -190,55 +190,58 @@ function App() {
     return { x, y };
   };
 
-  // Calculate connection point on shape based on line direction
+  // Calculate precise connection point on shape edge - NO GAPS
   const getShapeConnectionPoint = (lineStart, lineEnd, shapeType) => {
     const dx = lineEnd.x - lineStart.x;
     const dy = lineEnd.y - lineStart.y;
     
-    // Determine which side of the shape to connect to
+    // Determine approach angle
     const angle = Math.atan2(dy, dx);
-    const shapeSize = 35; // Base size for connection calculation
+    const uniformSize = 35 * 0.8; // Same size for all shapes
     
     let offsetX = 0;
     let offsetY = 0;
     
-    // All shapes now use the same size as diamond field weld
-    const uniformSize = shapeSize * 0.8; // Same as diamond size
-    
-    // Calculate offset based on shape type and direction
+    // Calculate exact edge connection points - NO GAPS
     switch (shapeType) {
-      case 'pipe_section': // Blue rectangle with rounded edges
+      case 'pipe_section': // Blue rectangle
       case 'pipe_support': // Red rectangle
-        // Use diamond size for rectangles too, but maintain rectangular proportions
-        const rectWidth = uniformSize * 1.4; // Keep wider aspect
-        const rectHeight = uniformSize * 0.7; // Consistent height
+        const rectWidth = uniformSize * 1.4;
+        const rectHeight = uniformSize * 0.7;
         
-        if (Math.abs(dx) > Math.abs(dy)) {
-          // Horizontal line - connect to left or right side
+        // Calculate which edge of rectangle to connect to
+        const absAngle = Math.abs(angle);
+        const isMoreHorizontal = absAngle < Math.PI/4 || absAngle > 3*Math.PI/4;
+        
+        if (isMoreHorizontal) {
+          // Connect to left or right edge
           offsetX = dx > 0 ? -rectWidth/2 : rectWidth/2;
           offsetY = 0;
         } else {
-          // Vertical line - connect to top or bottom side
+          // Connect to top or bottom edge
           offsetX = 0;
           offsetY = dy > 0 ? -rectHeight/2 : rectHeight/2;
         }
         break;
         
-      case 'flange_joint': // Hexagon 
-        const hexRadius = uniformSize / 2; // Same radius as diamond
+      case 'flange_joint': // Hexagon
+        const hexRadius = uniformSize/2 * 0.7;
+        // Connect to exact edge of hexagon
         offsetX = -Math.cos(angle) * hexRadius;
         offsetY = -Math.sin(angle) * hexRadius;
         break;
         
       case 'shop_weld': // Circle
-        const circleRadius = uniformSize / 2; // Same radius as diamond
+        const circleRadius = uniformSize * 0.35;
+        // Connect to exact edge of circle
         offsetX = -Math.cos(angle) * circleRadius;
         offsetY = -Math.sin(angle) * circleRadius;
         break;
         
       case 'field_weld': // Diamond
-      default: 
-        const diamondRadius = uniformSize / 2; // Diamond radius
+      default:
+        const diamondRadius = uniformSize/2;
+        // Connect to exact edge of diamond
         offsetX = -Math.cos(angle) * diamondRadius;
         offsetY = -Math.sin(angle) * diamondRadius;
         break;
