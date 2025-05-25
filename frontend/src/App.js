@@ -203,10 +203,10 @@ function App() {
     const x = (rawX - panOffset.x) / zoomLevel;
     const y = (rawY - panOffset.y) / zoomLevel;
 
-    // Check if clicking on existing symbol (for selection or removal)
+    // Check if clicking on existing symbol (for selection or removal) - more precise tolerance
     const clickedSymbol = currentPageSymbols.find(symbol => {
       const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
-      return distance <= 30; // Tolerance for symbol selection
+      return distance <= 15; // Reduced tolerance for more precise selection
     });
 
     if (clickedSymbol) {
