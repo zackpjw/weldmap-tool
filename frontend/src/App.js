@@ -937,7 +937,13 @@ function App() {
                               hexPoints.push(`${x},${y}`);
                             }
                             return (
-                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                left: -uniformSize/2, 
+                                top: -uniformSize/2,
+                                margin: 0,
+                                padding: 0,
+                                border: 'none'
+                              }}>
                                 {/* Hexagon outline */}
                                 <polygon
                                   points={hexPoints.join(' ')}
