@@ -901,6 +901,7 @@ function App() {
                         className="absolute top-0 left-0 w-full h-full pointer-events-none"
                         style={{ zIndex: 20 }}
                       >
+                        {/* Preview line */}
                         <line
                           x1={previewLine.start.x * zoomLevel + panOffset.x}
                           y1={previewLine.start.y * zoomLevel + panOffset.y}
@@ -911,22 +912,116 @@ function App() {
                           strokeDasharray="5,5"
                           opacity="0.7"
                         />
-                        
-                        {/* Preview symbol at end of line */}
-                        <text
-                          x={previewLine.end.x * zoomLevel + panOffset.x}
-                          y={previewLine.end.y * zoomLevel + panOffset.y}
-                          fontSize={29 * zoomLevel}
-                          fill="transparent"
-                          stroke={symbolTypes[selectedSymbolType].color}
-                          strokeWidth="2"
-                          textAnchor="middle"
-                          dominantBaseline="central"
-                          opacity="0.7"
-                        >
-                          {symbolTypes[selectedSymbolType].shape}
-                        </text>
                       </svg>
+                    )}
+
+                    {/* Render preview symbol at end of line */}
+                    {previewLine && (
+                      <div
+                        className="absolute pointer-events-none select-none"
+                        style={{
+                          left: `${previewLine.end.x * zoomLevel + panOffset.x}px`,
+                          top: `${previewLine.end.y * zoomLevel + panOffset.y}px`,
+                          zIndex: 25,
+                          opacity: 0.7
+                        }}
+                      >
+                        {(() => {
+                          const baseSize = 35 * zoomLevel;
+                          const strokeWidth = 2 * zoomLevel;
+                          const symbolConfig = symbolTypes[selectedSymbolType];
+                          
+                          switch (selectedSymbolType) {
+                            case 'field_weld': // Diamond
+                              const diamondSize = baseSize * 0.8;
+                              return (
+                                <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                  <polygon
+                                    points={`${baseSize/2},${(baseSize-diamondSize)/2} ${baseSize-(baseSize-diamondSize)/2},${baseSize/2} ${baseSize/2},${baseSize-(baseSize-diamondSize)/2} ${(baseSize-diamondSize)/2},${baseSize/2}`}
+                                    fill="none"
+                                    stroke={symbolConfig.color}
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                              
+                            case 'shop_weld': // Circle
+                              const radius = baseSize * 0.35;
+                              return (
+                                <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                  <circle
+                                    cx={baseSize/2}
+                                    cy={baseSize/2}
+                                    r={radius}
+                                    fill="none"
+                                    stroke={symbolConfig.color}
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                              
+                            case 'pipe_section': // Blue rectangle with rounded corners
+                              const blueWidth = baseSize * 1.2;
+                              const blueHeight = baseSize * 1.1;
+                              const borderRadius = 10;
+                              return (
+                                <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
+                                  <rect
+                                    x={strokeWidth/2}
+                                    y={strokeWidth/2}
+                                    width={blueWidth - strokeWidth}
+                                    height={blueHeight - strokeWidth}
+                                    rx={borderRadius}
+                                    ry={borderRadius}
+                                    fill="none"
+                                    stroke={symbolConfig.color}
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                              
+                            case 'pipe_support': // Red rectangle
+                              const redWidth = baseSize * 1.2;
+                              const redHeight = baseSize * 1.1;
+                              return (
+                                <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
+                                  <rect
+                                    x={strokeWidth/2}
+                                    y={strokeWidth/2}
+                                    width={redWidth - strokeWidth}
+                                    height={redHeight - strokeWidth}
+                                    fill="none"
+                                    stroke={symbolConfig.color}
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                              
+                            case 'flange_joint': // Hexagon
+                              const hexSize = baseSize * 0.7;
+                              const hexPoints = [];
+                              for (let i = 0; i < 6; i++) {
+                                const angle = (i * Math.PI) / 3;
+                                const x = baseSize/2 + hexSize/2 * Math.cos(angle);
+                                const y = baseSize/2 + hexSize/2 * Math.sin(angle);
+                                hexPoints.push(`${x},${y}`);
+                              }
+                              return (
+                                <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                  <polygon
+                                    points={hexPoints.join(' ')}
+                                    fill="none"
+                                    stroke={symbolConfig.color}
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                              
+                            default:
+                              return null;
+                          }
+                        })()}
+                      </div>
                     )}
                   </div>
                 </div>
