@@ -86,13 +86,9 @@ function App() {
 
     // Add keyboard event listener for delete
     const handleKeyDown = (event) => {
-      if ((event.key === 'Delete' || event.key === 'Backspace') && selectedSymbolId) {
-        event.preventDefault();
-        removeSymbol(selectedSymbolId);
-        setSelectedSymbolId(null);
-      }
       if (event.key === 'Escape') {
-        setSelectedSymbolId(null);
+        // Clear any active selections
+        setIsDragOver(false);
       }
     };
 
