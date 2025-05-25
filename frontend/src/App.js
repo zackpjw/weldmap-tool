@@ -634,7 +634,7 @@ function App() {
               
               <div className="mt-4 px-4 py-2 bg-gray-50 rounded-lg text-xs text-gray-600">
                 💡 Instructions: 
-                Click to select symbol • Click on drawing to place • Symbols can overlap • Click symbol to select • Delete/Backspace to remove
+                Select symbol type • Click and drag to draw line • Symbol appears at line end • Click existing symbols to select • Delete/Backspace to remove
               </div>
             </div>
 
