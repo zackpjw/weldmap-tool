@@ -691,108 +691,41 @@ function App() {
                           cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer'
                         }}
                       />
-          <div className="space-y-4">
-            {/* Top Toolbar - Symbol Palette */}
-            <div className="bg-white rounded-xl shadow-lg p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Weld Symbol Palette</h3>
-                <button
-                  onClick={startNewProject}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-                >
-                  🆕 New Project
-                </button>
-              </div>
-              
-              {/* Horizontal Symbol Palette */}
-              <div className="flex space-x-3">
-                {Object.entries(symbolTypes).map(([key, symbol]) => (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedSymbolType(key)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      selectedSymbolType === key
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center space-y-1">
-                      <span 
-                        className="text-2xl"
-                        style={{ color: symbol.color }}
-                      >
-                        {symbol.shape}
-                      </span>
-                      <p className="text-xs font-medium text-gray-800">{symbol.name}</p>
                     </div>
-                  </button>
-                ))}
-              </div>
-
-              {/* Quick Instructions */}
-              <div className="mt-3 text-xs text-gray-600 text-center">
-                Click to select symbol • Click on drawing to place • Symbols can overlap • Click symbol to select • Delete/Backspace to remove
-              </div>
-            </div>
-
-            {/* Main Editor Area */}
-            <div className="flex space-x-4 h-[600px]">
-              {/* PDF Editor Canvas - Left Side */}
-              <div className="flex-1 bg-white rounded-xl shadow-lg flex flex-col">
-                <div className="p-4 border-b border-gray-200 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      PDF Editor
-                    </h3>
-                    {pdfImages.length > 1 && (
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                          disabled={currentPage === 0}
-                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-                        >
-                          Previous
-                        </button>
-                        <span className="text-sm text-gray-600">
-                          Page {currentPage + 1} of {pdfImages.length}
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(Math.min(pdfImages.length - 1, currentPage + 1))}
-                          disabled={currentPage === pdfImages.length - 1}
-                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                <div className="flex-1 p-4 overflow-hidden">
-                  <div 
-                    className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas h-full"
-                    onMouseEnter={handlePDFMouseEnter}
-                    onMouseLeave={handlePDFMouseLeave}
-                  >
-                    <canvas
-                      ref={canvasRef}
-                      width={800}
-                      height={600}
-                      className="w-full h-full object-contain"
-                      onClick={handleCanvasClick}
-                      onDragOver={handleCanvasDragOver}
-                      onDrop={handleCanvasDrop}
-                      onMouseDown={handleMouseDown}
-                      onMouseMove={handleMouseMove}
-                      onMouseUp={handleMouseUp}
-                      style={{
-                        backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
-                        backgroundSize: `${100 * zoomLevel}%`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
-                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer'
-                      }}
-                    />
+                <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                  <div className="text-sm text-gray-600">
+                    <div className="flex justify-between items-center">
+                      <p>
+                        <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
+                      </p>
+                      <p>
+                        <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-gray-500">
+                        💡 Tip: Mouse wheel to zoom (inside PDF area), Ctrl+click to pan
+                      </p>
+                      {selectedSymbolId && (
+                        <p className="text-xs text-blue-600 font-medium">
+                          ✨ Symbol selected - Press Delete/Backspace to remove, Esc to deselect
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Current Symbols */}
+              <div className="w-80 bg-white rounded-xl shadow-lg flex flex-col h-full">
+                <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Current Page Symbols ({currentPageSymbols.length})
+                  </h3>
+                </div>
                     
                     {/* Render placed symbols with zoom scaling */}
                     {currentPageSymbols.map((symbol) => {
