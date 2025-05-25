@@ -168,7 +168,7 @@ function App() {
     // Check if clicking on existing symbol (for selection or removal)
     const clickedSymbol = currentPageSymbols.find(symbol => {
       const distance = Math.sqrt(Math.pow(x - symbol.x, 2) + Math.pow(y - symbol.y, 2));
-      return distance <= 30; // Increased tolerance for larger symbols
+      return distance <= 30; // Tolerance for symbol selection
     });
 
     if (clickedSymbol) {
@@ -178,7 +178,7 @@ function App() {
         setSelectedSymbolId(null);
         return;
       } else {
-        // Select symbol
+        // Select symbol (but allow placement of new symbols on top if not clicking exactly on a symbol)
         setSelectedSymbolId(clickedSymbol.id);
         return;
       }
@@ -187,7 +187,7 @@ function App() {
     // Clear selection if clicking on empty area
     setSelectedSymbolId(null);
 
-    // Add new symbol at click position (only if not in drawing mode)
+    // Always allow symbol placement (even overlapping) - only prevent in drawing mode
     if (!isDrawingMode) {
       const newSymbol = {
         id: Date.now(),
