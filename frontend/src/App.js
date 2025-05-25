@@ -663,7 +663,11 @@ function App() {
                 </div>
 
                 <div className="p-4">
-                  <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas">
+                  <div 
+                    className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas"
+                    onMouseEnter={handlePDFMouseEnter}
+                    onMouseLeave={handlePDFMouseLeave}
+                  >
                     <canvas
                       ref={canvasRef}
                       width={800}
@@ -672,11 +676,9 @@ function App() {
                       onClick={handleCanvasClick}
                       onDragOver={handleCanvasDragOver}
                       onDrop={handleCanvasDrop}
-                      onWheel={handleWheel}
                       onMouseDown={handleMouseDown}
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleMouseUp}
-                      onMouseLeave={handleMouseUp}
                       style={{
                         backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
                         backgroundSize: `${100 * zoomLevel}%`,
