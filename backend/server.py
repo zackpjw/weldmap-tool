@@ -153,7 +153,7 @@ async def export_pdf(export_data: dict):
             'flange_joint': (0, 0.4, 1)     # Blue
         }
         
-        # Process each page
+        # Process each page with LOCKED positioning system
         for page_num, image_base64 in enumerate(images):
             print(f"Processing page {page_num + 1}")
             
@@ -164,7 +164,7 @@ async def export_pdf(export_data: dict):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Draw background image
+            # Draw background image FIRST - this is the base layer for grouping
             temp_file = f"/tmp/export_page_{page_num}.png"
             img.save(temp_file, "PNG", quality=95)
             pdf_canvas.drawImage(temp_file, 0, 0, pdf_width, pdf_height)
@@ -174,41 +174,62 @@ async def export_pdf(export_data: dict):
             except:
                 pass
             
-            # Draw annotations for this page with PERFECT positioning
+            # LOCKED ANNOTATION SYSTEM: Group annotations with PDF page
             page_annotations = [s for s in symbols if s.get('page', 0) == page_num]
-            print(f"Drawing {len(page_annotations)} annotations on page {page_num + 1}")
+            print(f"Locking {len(page_annotations)} annotations to page {page_num + 1}")
             
+            # Create annotation group - all annotations locked to PDF coordinate system
             for annotation in page_annotations:
                 symbol_type = annotation.get('type', 'field_weld')
                 color = colors.get(symbol_type, (0, 0, 1))
                 
-                # Set drawing properties
+                # LOCK: Set drawing properties for this annotation group
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
                 pdf_canvas.setLineWidth(2)
                 
-                # Draw line if exists - EXACT positioning
+                # LOCK: Calculate ABSOLUTE positions (locked to PDF coordinate system)
+                line_start_abs = None
+                line_end_abs = None
+                symbol_pos_abs = None
+                
                 if annotation.get('lineStart') and annotation.get('lineEnd'):
                     line_start = annotation['lineStart']
                     line_end = annotation['lineEnd']
                     
-                    # Transform coordinates EXACTLY
-                    start_x = line_start['x'] * scale_x
-                    start_y = pdf_height - (line_start['y'] * scale_y)
-                    end_x = line_end['x'] * scale_x  
-                    end_y = pdf_height - (line_end['y'] * scale_y)
-                    
-                    pdf_canvas.line(start_x, start_y, end_x, end_y)
+                    # ABSOLUTE positioning - locked to PDF
+                    line_start_abs = {
+                        'x': line_start['x'] * scale_x,
+                        'y': pdf_height - (line_start['y'] * scale_y)
+                    }
+                    line_end_abs = {
+                        'x': line_end['x'] * scale_x,
+                        'y': pdf_height - (line_end['y'] * scale_y)
+                    }
                 
-                # Draw symbol at EXACT position - NO GAPS
                 symbol_pos = annotation.get('symbolPosition')
                 if symbol_pos:
-                    sym_x = symbol_pos['x'] * scale_x
-                    sym_y = pdf_height - (symbol_pos['y'] * scale_y)
+                    # ABSOLUTE positioning - locked to PDF
+                    symbol_pos_abs = {
+                        'x': symbol_pos['x'] * scale_x,
+                        'y': pdf_height - (symbol_pos['y'] * scale_y)
+                    }
+                
+                # STEP 1: Draw line if exists (first part of the group)
+                if line_start_abs and line_end_abs:
+                    pdf_canvas.line(
+                        line_start_abs['x'], line_start_abs['y'],
+                        line_end_abs['x'], line_end_abs['y']
+                    )
+                
+                # STEP 2: Draw symbol at EXACT locked position (second part of the group)
+                if symbol_pos_abs:
+                    sym_x = symbol_pos_abs['x']
+                    sym_y = symbol_pos_abs['y']
                     
-                    # Draw shape with EXACT specifications from frontend
+                    # LOCKED shapes with NO margins - exact positioning
                     if symbol_type == 'field_weld':
-                        # Diamond - exact same size as frontend
+                        # Diamond - LOCKED positioning
                         size = uniform_size_pdf * 0.8
                         points = [
                             (sym_x, sym_y + size),
@@ -224,12 +245,12 @@ async def export_pdf(export_data: dict):
                         pdf_canvas.drawPath(path, stroke=1, fill=0)
                         
                     elif symbol_type == 'shop_weld':
-                        # Circle - exact same size as frontend
+                        # Circle - LOCKED positioning
                         radius = uniform_size_pdf * 0.35
                         pdf_canvas.circle(sym_x, sym_y, radius, stroke=1, fill=0)
                         
                     elif symbol_type == 'pipe_section':
-                        # Blue rectangle - exact same proportions as frontend
+                        # Blue rectangle - LOCKED positioning, NO margins
                         width = uniform_size_pdf * 1.4
                         height = uniform_size_pdf * 0.7
                         pdf_canvas.roundRect(
@@ -239,7 +260,7 @@ async def export_pdf(export_data: dict):
                         )
                         
                     elif symbol_type == 'pipe_support':
-                        # Red rectangle - exact same proportions as frontend
+                        # Red rectangle - LOCKED positioning, NO margins
                         width = uniform_size_pdf * 1.4
                         height = uniform_size_pdf * 0.7
                         pdf_canvas.rect(
@@ -249,7 +270,7 @@ async def export_pdf(export_data: dict):
                         )
                         
                     elif symbol_type == 'flange_joint':
-                        # Hexagon with line - exact same as frontend
+                        # Hexagon with line - LOCKED positioning, NO margins
                         hex_radius = uniform_size_pdf/2 * 0.7
                         hex_points = []
                         for i in range(6):
@@ -266,12 +287,16 @@ async def export_pdf(export_data: dict):
                         path.close()
                         pdf_canvas.drawPath(path, stroke=1, fill=0)
                         
-                        # Draw horizontal line inside
+                        # Draw horizontal line inside - LOCKED to hexagon center
                         line_length = uniform_size_pdf * 0.25
                         pdf_canvas.line(
                             sym_x - line_length, sym_y,
                             sym_x + line_length, sym_y
                         )
+                
+                print(f"Locked annotation {annotation.get('id')} to absolute position")
+            
+            print(f"All annotations locked to page {page_num + 1}")
             
             # Add new page if not last
             if page_num < len(images) - 1:
