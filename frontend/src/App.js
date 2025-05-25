@@ -819,7 +819,7 @@ function App() {
               <div className="w-80 bg-white rounded-xl shadow-lg flex flex-col h-full">
                 <div className="p-4 border-b border-gray-200 flex-shrink-0">
                   <h3 className="text-lg font-semibold text-gray-800">
-                    Current Page Symbols ({currentPageSymbols.length})
+                    Current Page Annotations ({currentPageSymbols.length})
                   </h3>
                 </div>
                 
