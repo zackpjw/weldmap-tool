@@ -833,8 +833,10 @@ function App() {
                       );
                     })}
                   </div>
+                </div>
 
-                  <div className="mt-4 text-sm text-gray-600">
+                <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                  <div className="text-sm text-gray-600">
                     <div className="flex justify-between items-center">
                       <p>
                         <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
@@ -845,7 +847,7 @@ function App() {
                     </div>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-xs text-gray-500">
-                        💡 Tip: Use mouse wheel to zoom (inside PDF area), Ctrl+click to pan
+                        💡 Tip: Mouse wheel to zoom (inside PDF area), Ctrl+click to pan
                       </p>
                       {selectedSymbolId && (
                         <p className="text-xs text-blue-600 font-medium">
@@ -858,14 +860,14 @@ function App() {
               </div>
 
               {/* Right Panel - Current Symbols */}
-              <div className="w-80 bg-white rounded-xl shadow-lg">
-                <div className="p-4 border-b border-gray-200">
+              <div className="w-80 bg-white rounded-xl shadow-lg flex flex-col h-full">
+                <div className="p-4 border-b border-gray-200 flex-shrink-0">
                   <h3 className="text-lg font-semibold text-gray-800">
                     Current Page Symbols ({currentPageSymbols.length})
                   </h3>
                 </div>
                 
-                <div className="p-4">
+                <div className="flex-1 p-4 overflow-hidden">
                   {currentPageSymbols.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <div className="text-4xl mb-2">📐</div>
@@ -873,7 +875,7 @@ function App() {
                       <p className="text-xs">Select a symbol type and click on the drawing to place it</p>
                     </div>
                   ) : (
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                    <div className="space-y-2 h-full overflow-y-auto">
                       {currentPageSymbols.map((symbol, index) => (
                         <div 
                           key={symbol.id}
