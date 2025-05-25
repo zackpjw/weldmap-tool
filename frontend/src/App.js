@@ -85,6 +85,15 @@ function App() {
     setIsPanning(false);
   }, []);
 
+  // Handle mouse enter/leave for PDF area to control scroll behavior
+  const handlePDFMouseEnter = useCallback(() => {
+    setIsMouseOverPDF(true);
+  }, []);
+
+  const handlePDFMouseLeave = useCallback(() => {
+    setIsMouseOverPDF(false);
+  }, []);
+
   // Load saved projects on component mount and add keyboard listener
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem('weldMappingProjects') || '[]');
