@@ -190,7 +190,7 @@ function App() {
     // Check if clicking on an existing symbol
     const clickedSymbol = currentPageSymbols.find(symbol => {
       const distance = Math.sqrt(Math.pow(symbol.x - x, 2) + Math.pow(symbol.y - y, 2));
-      return distance < 20; // 20px click tolerance
+      return distance < 30; // 30px click tolerance (increased for better click detection)
     });
 
     if (clickedSymbol) {
@@ -202,13 +202,13 @@ function App() {
       return;
     }
 
-    // If not in drawing mode and not clicking on symbol, deselect
+    // If in drawing mode and not clicking on symbol, deselect
     if (isDrawingMode) {
       setSelectedSymbolId(null);
       return;
     }
 
-    // Place new symbol
+    // Place new symbol only if NOT in drawing mode
     const newSymbol = {
       id: Date.now(),
       type: selectedSymbolType,
