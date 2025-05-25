@@ -459,61 +459,156 @@ function App() {
     setError(null);
   };
 
-  // Export functionality - COMPLETELY REWRITTEN
+  // Enhanced export functionality with Best Visual Fidelity
   const exportPDF = async () => {
     try {
-      console.log('Starting PDF export...');
+      console.log('Starting Best Visual Fidelity PDF export...');
       
-      // Get actual canvas information for precise export
+      // Get actual canvas information for EXACT fidelity matching
       const canvas = canvasRef.current;
       if (!canvas) {
-        throw new Error('Canvas not available');
+        throw new Error('Canvas not available for export');
       }
       
       const canvasRect = canvas.getBoundingClientRect();
+      const canvasStyle = window.getComputedStyle(canvas);
       
-      // Prepare export data with all necessary information for perfect matching
+      // BEST VISUAL FIDELITY: Capture exact rendering context
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const canvasContext = canvas.getContext('2d');
+      const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+      
+      // EXACT RESOLUTION MATCHING: Get precise dimensions
+      const exactCanvasWidth = canvas.width;
+      const exactCanvasHeight = canvas.height;
+      const exactDisplayWidth = canvasRect.width;
+      const exactDisplayHeight = canvasRect.height;
+      
+      // SCALING CONSISTENCY: Calculate exact scale factors used in editor
+      const editorScaleX = exactCanvasWidth / exactDisplayWidth;
+      const editorScaleY = exactCanvasHeight / exactDisplayHeight;
+      
+      // BEST VISUAL FIDELITY: Prepare comprehensive export data
       const exportData = {
         symbols: placedSymbols.map(symbol => ({
           ...symbol,
-          // Ensure all coordinate data is properly structured
+          // Ensure all coordinate data is preserved with full precision
           id: symbol.id,
           type: symbol.type,
           page: symbol.page,
           lineStart: symbol.lineStart,
           lineEnd: symbol.lineEnd,
-          symbolPosition: symbol.symbolPosition
+          symbolPosition: symbol.symbolPosition,
+          // Add editor context for exact reproduction
+          editorContext: {
+            zoomLevel: zoomLevel,
+            panOffset: panOffset,
+            timestamp: Date.now()
+          }
         })),
         images: pdfImages,
-        filename: 'weld_mapping_export',
-        canvasInfo: {
-          // Canvas element properties
-          elementWidth: canvas.width,
-          elementHeight: canvas.height,
-          // Displayed canvas size
-          displayedWidth: canvasRect.width,
-          displayedHeight: canvasRect.height,
-          // Current view state
-          currentZoom: zoomLevel,
-          currentPan: panOffset,
-          // Additional context
-          devicePixelRatio: window.devicePixelRatio || 1
+        filename: 'weld_mapping_high_fidelity',
+        
+        // EXACT FIDELITY PARAMETERS
+        fidelitySettings: {
+          // Visual fidelity mode
+          bestVisualFidelity: true,
+          preserveExactPositions: true,
+          matchEditorScaling: true,
+          
+          // Resolution matching
+          exactResolution: true,
+          devicePixelRatio: devicePixelRatio,
+          antiAliasing: true,
+          subpixelRendering: true,
+          
+          // Coordinate system precision
+          coordinatePrecision: 'high', // vs 'standard'
+          anchorPointConsistency: true,
+          pixelPerfectAlignment: true
         },
-        // Include shape specifications for exact reproduction
+        
+        // EXACT CANVAS SPECIFICATIONS
+        canvasSpecs: {
+          // Physical canvas properties
+          elementWidth: exactCanvasWidth,
+          elementHeight: exactCanvasHeight,
+          
+          // Display properties
+          displayedWidth: exactDisplayWidth,
+          displayedHeight: exactDisplayHeight,
+          
+          // Scaling properties (CRITICAL for fidelity)
+          editorScaleX: editorScaleX,
+          editorScaleY: editorScaleY,
+          devicePixelRatio: devicePixelRatio,
+          
+          // Current view state (EXACT)
+          currentZoom: zoomLevel,
+          currentPan: { ...panOffset },
+          
+          // Browser context
+          browserZoom: window.outerWidth / window.innerWidth,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+          
+          // Canvas styling context
+          canvasCSS: {
+            width: canvasStyle.width,
+            height: canvasStyle.height,
+            transform: canvasStyle.transform,
+            position: canvasStyle.position
+          }
+        },
+        
+        // EXACT SHAPE SPECIFICATIONS (for perfect reproduction)
         shapeSpecs: {
           baseSize: 35,
           uniformSize: 35 * 0.8,
-          diamond: { sizeMultiplier: 0.8 },
-          circle: { radiusMultiplier: 0.35 },
-          blueRect: { widthMultiplier: 1.4, heightMultiplier: 0.7, borderRadius: 8 },
-          redRect: { widthMultiplier: 1.4, heightMultiplier: 0.7 },
-          hexagon: { radiusMultiplier: 0.7, lineLength: 0.25 }
+          strokeWidth: 2,
+          
+          // Exact multipliers used in editor
+          shapes: {
+            diamond: { 
+              sizeMultiplier: 0.8,
+              anchorPoint: 'center',
+              coordinateSystem: 'canvas'
+            },
+            circle: { 
+              radiusMultiplier: 0.35,
+              anchorPoint: 'center',
+              coordinateSystem: 'canvas'
+            },
+            blueRect: { 
+              widthMultiplier: 1.4, 
+              heightMultiplier: 0.7, 
+              borderRadius: 8,
+              anchorPoint: 'center',
+              coordinateSystem: 'canvas'
+            },
+            redRect: { 
+              widthMultiplier: 1.4, 
+              heightMultiplier: 0.7,
+              anchorPoint: 'center',
+              coordinateSystem: 'canvas'
+            },
+            hexagon: { 
+              radiusMultiplier: 0.7, 
+              lineLength: 0.25,
+              anchorPoint: 'center',
+              coordinateSystem: 'canvas'
+            }
+          }
         }
       };
 
-      console.log('Export data prepared:', {
+      console.log('Best Visual Fidelity export data prepared:', {
         symbolCount: exportData.symbols.length,
-        canvasInfo: exportData.canvasInfo
+        fidelityMode: exportData.fidelitySettings.bestVisualFidelity,
+        exactResolution: `${exactCanvasWidth}x${exactCanvasHeight}`,
+        displaySize: `${exactDisplayWidth}x${exactDisplayHeight}`,
+        scaling: `${editorScaleX.toFixed(4)}x${editorScaleY.toFixed(4)}`,
+        devicePixelRatio: devicePixelRatio
       });
 
       const response = await fetch(`${API_BASE_URL}/api/export-pdf`, {
@@ -526,24 +621,24 @@ function App() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Export failed: ${response.status} - ${errorText}`);
+        throw new Error(`High Fidelity Export failed: ${response.status} - ${errorText}`);
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'weld_mapping_annotated.pdf';
+      link.download = 'weld_mapping_high_fidelity.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log('PDF export completed successfully');
+      console.log('Best Visual Fidelity PDF export completed successfully');
 
     } catch (error) {
-      console.error('PDF export error:', error);
-      setError(`Failed to export PDF: ${error.message}`);
+      console.error('High Fidelity PDF export error:', error);
+      setError(`Failed to export high fidelity PDF: ${error.message}`);
     }
   };
 
