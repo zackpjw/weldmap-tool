@@ -304,24 +304,14 @@ function App() {
   };
 
   const handleMouseMove = (event) => {
-    if (isPanning) {
-      const { x, y } = getCanvasCoordinates(event);
-      const deltaX = x - lastPanPoint.x;
-      const deltaY = y - lastPanPoint.y;
-      
-      setPanOffset(prev => ({
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
-      }));
-      
-      setLastPanPoint({ x, y });
-      event.preventDefault();
-    }
+    handleCanvasMouseMove(event);
   };
 
   const handleMouseUp = useCallback(() => {
-    setIsPanning(false);
-  }, []);
+    if (isPanning) {
+      setIsPanning(false);
+    }
+  }, [isPanning]);
 
   // Canvas drag and drop for symbols
   const handleCanvasDragOver = (event) => {
