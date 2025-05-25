@@ -509,6 +509,19 @@ function App() {
             {/* Symbol Palette */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
+                {/* New Project Button */}
+                <div className="mb-4">
+                  <button
+                    onClick={startNewProject}
+                    className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                  >
+                    🆕 New Project
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    Start fresh with a new drawing
+                  </p>
+                </div>
+
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Weld Symbol Palette</h3>
                 
                 <div className="space-y-3 mb-6">
