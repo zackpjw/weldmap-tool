@@ -99,11 +99,12 @@ async def upload_pdf_only(file: UploadFile = File(...)):
 
 @app.post("/api/export-pdf")
 async def export_pdf(project_data: dict):
-    """Export annotated drawing as PDF with placed symbols and lines"""
+    """Export annotated drawing as PDF with placed symbols and lines - FIXED COORDINATES"""
     try:
         filename = project_data.get('filename', 'weld_mapping')
         symbols = project_data.get('symbols', [])
         images = project_data.get('images', [])
+        canvas_info = project_data.get('canvasInfo', {})
         
         if not images:
             raise HTTPException(status_code=400, detail="No images to export")
@@ -111,16 +112,24 @@ async def export_pdf(project_data: dict):
         # Create PDF buffer
         buffer = io.BytesIO()
         
-        # First, get the original dimensions from the first image to maintain exact size
+        # Get the original dimensions from the first image
         first_img_data = base64.b64decode(images[0])
         first_img = Image.open(io.BytesIO(first_img_data))
-        img_width, img_height = first_img.size
+        original_img_width, original_img_height = first_img.size
         
-        # Use original image dimensions for PDF to maintain exact size and quality
-        page_width = img_width * 0.75  # Convert pixels to points (96 DPI to 72 DPI)
-        page_height = img_height * 0.75
+        # PDF page dimensions (maintain aspect ratio)
+        pdf_width = original_img_width * 0.75  # Convert pixels to points
+        pdf_height = original_img_height * 0.75
         
-        pdf_canvas = canvas.Canvas(buffer, pagesize=(page_width, page_height))
+        pdf_canvas = canvas.Canvas(buffer, pagesize=(pdf_width, pdf_height))
+        
+        # Canvas information from frontend
+        canvas_width = canvas_info.get('width', 800)
+        canvas_height = canvas_info.get('height', 600)
+        
+        # Calculate scale factors for coordinate transformation
+        scale_x = pdf_width / canvas_width
+        scale_y = pdf_height / canvas_height
         
         # Symbol colors mapping
         symbol_colors = {
@@ -140,13 +149,12 @@ async def export_pdf(project_data: dict):
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Maintain original image size and quality - draw at full resolution
             # Save as temporary file for PDF
             temp_file = f"/tmp/temp_img_{page_num}.png"
             img.save(temp_file, "PNG", quality=95, optimize=False)
             
-            # Draw background image at full size to maintain quality
-            pdf_canvas.drawImage(temp_file, 0, 0, page_width, page_height)
+            # Draw background image at full size
+            pdf_canvas.drawImage(temp_file, 0, 0, pdf_width, pdf_height)
             
             # Clean up temp file
             try:
@@ -154,41 +162,42 @@ async def export_pdf(project_data: dict):
             except:
                 pass
             
-            # Draw annotations for this page
+            # Draw annotations for this page with CORRECTED coordinates
             page_symbols = [s for s in symbols if s.get('page', 0) == page_num]
             
             for annotation in page_symbols:
                 # Handle both old format (x, y) and new format (symbolPosition, lineStart, lineEnd)
                 symbol_pos = annotation.get('symbolPosition') or {'x': annotation.get('x', 0), 'y': annotation.get('y', 0)}
                 
-                # Transform coordinates from frontend canvas to PDF - EXACT MATCH
-                symbol_x = symbol_pos['x'] * (page_width / 800)  # Scale from 800px canvas width
-                symbol_y = (600 - symbol_pos['y']) * (page_height / 600)  # Flip Y and scale from 600px canvas height
+                # CORRECTED coordinate transformation
+                # Frontend coordinates are already in canvas space, just scale directly
+                symbol_x = symbol_pos['x'] * scale_x
+                symbol_y = pdf_height - (symbol_pos['y'] * scale_y)  # Flip Y-axis for PDF
                 
                 symbol_type = annotation.get('type', 'field_weld')
                 
-                # Set color
+                # Set color and line width
                 color = symbol_colors.get(symbol_type, (0, 0, 1))
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
                 pdf_canvas.setLineWidth(2)
                 
-                # Draw line if it exists - EXACT coordinate transformation
+                # Draw line if it exists with CORRECTED coordinates
                 if annotation.get('lineStart') and annotation.get('lineEnd'):
-                    line_start_x = annotation['lineStart']['x'] * (page_width / 800)
-                    line_start_y = (600 - annotation['lineStart']['y']) * (page_height / 600)
-                    line_end_x = annotation['lineEnd']['x'] * (page_width / 800)
-                    line_end_y = (600 - annotation['lineEnd']['y']) * (page_height / 600)
+                    line_start_x = annotation['lineStart']['x'] * scale_x
+                    line_start_y = pdf_height - (annotation['lineStart']['y'] * scale_y)
+                    line_end_x = annotation['lineEnd']['x'] * scale_x
+                    line_end_y = pdf_height - (annotation['lineEnd']['y'] * scale_y)
                     
                     pdf_canvas.line(line_start_x, line_start_y, line_end_x, line_end_y)
                 
-                # Draw symbol based on type - ALL SAME SIZE AS DIAMOND (uniformSize = 28 * 0.8 = 22.4)
-                base_size = 28  # Scaled from 35px frontend to PDF points
-                uniform_size = base_size * 0.8  # Same as diamond size (22.4)
+                # Draw symbol with uniform sizing - scale based on PDF size
+                base_size = 20  # Base size in PDF points
+                uniform_size = base_size * 0.8  # All shapes same size as diamond
                 
                 if symbol_type == 'field_weld':
-                    # Diamond - base size
-                    size = uniform_size * 0.8  # Inner diamond size
+                    # Diamond
+                    size = uniform_size * 0.8
                     points = [(symbol_x, symbol_y + size), (symbol_x + size, symbol_y), 
                              (symbol_x, symbol_y - size), (symbol_x - size, symbol_y)]
                     path = pdf_canvas.beginPath()
@@ -204,22 +213,22 @@ async def export_pdf(project_data: dict):
                     pdf_canvas.circle(symbol_x, symbol_y, radius, stroke=1, fill=0)
                     
                 elif symbol_type == 'pipe_section':
-                    # Blue rectangle - based on diamond size, wider aspect
-                    width = uniform_size * 1.4  # Wider aspect
-                    height = uniform_size * 0.7  # Height based on diamond
+                    # Blue rectangle - based on diamond size
+                    width = uniform_size * 1.4
+                    height = uniform_size * 0.7
                     pdf_canvas.roundRect(symbol_x-width/2, symbol_y-height/2, width, height, 
-                                       6, stroke=1, fill=0)  # 6pt radius for rounded corners
+                                       4, stroke=1, fill=0)  # 4pt radius for rounded corners
                     
                 elif symbol_type == 'pipe_support':
-                    # Red rectangle - based on diamond size, wider aspect
-                    width = uniform_size * 1.4  # Wider aspect
-                    height = uniform_size * 0.7  # Height based on diamond
+                    # Red rectangle - based on diamond size
+                    width = uniform_size * 1.4
+                    height = uniform_size * 0.7
                     pdf_canvas.rect(symbol_x-width/2, symbol_y-height/2, width, height, 
                                   stroke=1, fill=0)
                     
                 elif symbol_type == 'flange_joint':
                     # Hexagon with horizontal line inside - same size as diamond
-                    hex_radius = uniform_size / 2 * 0.7  # Same proportions as frontend
+                    hex_radius = uniform_size / 2 * 0.7
                     hex_points = []
                     for i in range(6):
                         angle = i * math.pi / 3
@@ -236,7 +245,7 @@ async def export_pdf(project_data: dict):
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
                     # Draw horizontal line inside hexagon
-                    line_length = uniform_size / 4  # Same proportions as frontend
+                    line_length = uniform_size / 4
                     pdf_canvas.line(symbol_x - line_length, symbol_y, 
                                   symbol_x + line_length, symbol_y)
             
