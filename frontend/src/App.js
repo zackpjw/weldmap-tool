@@ -771,7 +771,8 @@ function App() {
                       const symbolPos = annotation.symbolPosition || { x: annotation.x, y: annotation.y };
                       const scaledSymbolX = symbolPos.x * zoomLevel + panOffset.x;
                       const scaledSymbolY = symbolPos.y * zoomLevel + panOffset.y;
-                      const baseSize = 35 * zoomLevel; // 20% larger than previous 29px
+                      const baseSize = 35 * zoomLevel; // Base size
+                      const uniformSize = baseSize * 0.8; // All shapes same size as diamond
                       
                       // Render shape based on type
                       const renderShape = () => {
@@ -780,11 +781,10 @@ function App() {
                         
                         switch (annotation.type) {
                           case 'field_weld': // Diamond
-                            const diamondSize = baseSize * 0.8;
                             return (
-                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
                                 <polygon
-                                  points={`${baseSize/2},${(baseSize-diamondSize)/2} ${baseSize-(baseSize-diamondSize)/2},${baseSize/2} ${baseSize/2},${baseSize-(baseSize-diamondSize)/2} ${(baseSize-diamondSize)/2},${baseSize/2}`}
+                                  points={`${uniformSize/2},${(uniformSize-uniformSize*0.8)/2} ${uniformSize-(uniformSize-uniformSize*0.8)/2},${uniformSize/2} ${uniformSize/2},${uniformSize-(uniformSize-uniformSize*0.8)/2} ${(uniformSize-uniformSize*0.8)/2},${uniformSize/2}`}
                                   fill="none"
                                   stroke={symbolConfig.color}
                                   strokeWidth={strokeWidth}
@@ -793,13 +793,13 @@ function App() {
                               </svg>
                             );
                             
-                          case 'shop_weld': // Circle
-                            const radius = baseSize * 0.35;
+                          case 'shop_weld': // Circle - same size as diamond
+                            const radius = uniformSize * 0.35;
                             return (
-                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
                                 <circle
-                                  cx={baseSize/2}
-                                  cy={baseSize/2}
+                                  cx={uniformSize/2}
+                                  cy={uniformSize/2}
                                   r={radius}
                                   fill="none"
                                   stroke={symbolConfig.color}
@@ -809,10 +809,10 @@ function App() {
                               </svg>
                             );
                             
-                          case 'pipe_section': // Blue rectangle with rounded corners
-                            const blueWidth = baseSize * 1.4; // 40% wider (20% + 20% more)
-                            const blueHeight = baseSize * 0.55; // 50% of current height
-                            const borderRadius = 10;
+                          case 'pipe_section': // Blue rectangle - based on diamond size
+                            const blueWidth = uniformSize * 1.4; // Wider aspect
+                            const blueHeight = uniformSize * 0.7; // Height based on diamond
+                            const borderRadius = 8;
                             return (
                               <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
                                 <rect
@@ -830,9 +830,9 @@ function App() {
                               </svg>
                             );
                             
-                          case 'pipe_support': // Red rectangle (sharp corners)
-                            const redWidth = baseSize * 1.4; // 40% wider (20% + 20% more)
-                            const redHeight = baseSize * 0.55; // 50% of current height
+                          case 'pipe_support': // Red rectangle - based on diamond size
+                            const redWidth = uniformSize * 1.4; // Wider aspect
+                            const redHeight = uniformSize * 0.7; // Height based on diamond
                             return (
                               <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
                                 <rect
@@ -848,17 +848,16 @@ function App() {
                               </svg>
                             );
                             
-                          case 'flange_joint': // Hexagon with horizontal line inside
-                            const hexSize = baseSize * 0.77; // 10% larger than previous (0.7 * 1.1)
+                          case 'flange_joint': // Hexagon with horizontal line - same size as diamond
                             const hexPoints = [];
                             for (let i = 0; i < 6; i++) {
                               const angle = (i * Math.PI) / 3;
-                              const x = baseSize/2 + hexSize/2 * Math.cos(angle);
-                              const y = baseSize/2 + hexSize/2 * Math.sin(angle);
+                              const x = uniformSize/2 + (uniformSize/2 * 0.7) * Math.cos(angle);
+                              const y = uniformSize/2 + (uniformSize/2 * 0.7) * Math.sin(angle);
                               hexPoints.push(`${x},${y}`);
                             }
                             return (
-                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                              <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
                                 {/* Hexagon outline */}
                                 <polygon
                                   points={hexPoints.join(' ')}
@@ -869,10 +868,10 @@ function App() {
                                 />
                                 {/* Horizontal line inside hexagon */}
                                 <line
-                                  x1={baseSize/2 - hexSize/3}
-                                  y1={baseSize/2}
-                                  x2={baseSize/2 + hexSize/3}
-                                  y2={baseSize/2}
+                                  x1={uniformSize/2 - uniformSize/4}
+                                  y1={uniformSize/2}
+                                  x2={uniformSize/2 + uniformSize/4}
+                                  y2={uniformSize/2}
                                   stroke={symbolConfig.color}
                                   strokeWidth={strokeWidth}
                                   className={isSelected ? 'opacity-100' : 'opacity-90'}
