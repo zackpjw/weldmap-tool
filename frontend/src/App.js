@@ -176,9 +176,11 @@ function App() {
       if (isDrawingMode) {
         // Remove mode - delete symbol
         removeSymbol(clickedSymbol.id);
+        setSelectedSymbolId(null);
         return;
       } else {
-        // Allow placement of new symbols on top if not clicking exactly on a symbol
+        // Select symbol (but allow placement of new symbols on top if not clicking exactly on a symbol)
+        setSelectedSymbolId(clickedSymbol.id);
         return;
       }
     }
