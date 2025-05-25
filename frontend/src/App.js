@@ -173,21 +173,47 @@ function App() {
   };
 
   // Canvas interaction functions
-  const getCanvasCoordinates = (event) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
+  // Calculate connection point on shape based on line direction
+  const getShapeConnectionPoint = (lineStart, lineEnd, shapeType) => {
+    const dx = lineEnd.x - lineStart.x;
+    const dy = lineEnd.y - lineStart.y;
     
-    // Get raw coordinates relative to canvas
-    const rawX = event.clientX - rect.left;
-    const rawY = event.clientY - rect.top;
+    // Determine which side of the shape to connect to
+    const angle = Math.atan2(dy, dx);
+    const shapeSize = 35; // Base size for connection calculation
     
-    // Convert to canvas space accounting for zoom and pan
-    const x = (rawX - panOffset.x) / zoomLevel;
-    const y = (rawY - panOffset.y) / zoomLevel;
-
-    return { x, y };
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // Calculate offset based on shape type and direction
+    switch (shapeType) {
+      case 'pipe_section': // Blue rectangle with rounded edges
+      case 'pipe_support': // Red rectangle
+        const width = shapeSize * 1.2; // 20% wider
+        const height = shapeSize * 1.1; // 10% taller
+        
+        if (Math.abs(dx) > Math.abs(dy)) {
+          // Horizontal line - connect to left or right side
+          offsetX = dx > 0 ? -width/2 : width/2;
+          offsetY = 0;
+        } else {
+          // Vertical line - connect to top or bottom side
+          offsetX = 0;
+          offsetY = dy > 0 ? -height/2 : height/2;
+        }
+        break;
+        
+      default: // Circular/diamond shapes
+        const radius = shapeSize/2;
+        offsetX = -Math.cos(angle) * radius;
+        offsetY = -Math.sin(angle) * radius;
+        break;
+    }
+    
+    return {
+      x: lineEnd.x + offsetX,
+      y: lineEnd.y + offsetY
+    };
   };
 
   const handleCanvasClick = (event) => {
