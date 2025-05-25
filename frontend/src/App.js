@@ -111,12 +111,21 @@ function App() {
       }
     };
 
+    // Add global wheel event listener for better scroll control
+    const handleGlobalWheel = (event) => {
+      // Let the handleWheel function handle PDF area zooming
+      // This ensures smooth integration with page scrolling
+      handleWheel(event);
+    };
+
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleGlobalWheel, { passive: false });
     
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleGlobalWheel);
     };
-  }, [selectedSymbolId]);
+  }, [selectedSymbolId, handleWheel]);
 
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
