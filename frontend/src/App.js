@@ -51,9 +51,12 @@ function App() {
   };
 
   const handleWheel = useCallback((event) => {
-    event.preventDefault();
-    const delta = event.deltaY > 0 ? 0.9 : 1.1;
-    setZoomLevel(prev => Math.min(Math.max(prev * delta, 0.2), 5));
+    // Only prevent default scrolling if mouse is over the canvas area
+    if (event.target.closest('.pdf-editor-canvas')) {
+      event.preventDefault();
+      const delta = event.deltaY > 0 ? 0.9 : 1.1;
+      setZoomLevel(prev => Math.min(Math.max(prev * delta, 0.2), 5));
+    }
   }, []);
 
   const handleMouseDown = useCallback((event) => {
