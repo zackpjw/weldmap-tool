@@ -25,6 +25,13 @@ function App() {
   const [selectedSymbolId, setSelectedSymbolId] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isMouseOverPDF, setIsMouseOverPDF] = useState(false);
+  
+  // New states for line drawing functionality
+  const [isDrawingLine, setIsDrawingLine] = useState(false);
+  const [lineStart, setLineStart] = useState(null);
+  const [currentLineEnd, setCurrentLineEnd] = useState(null);
+  const [previewLine, setPreviewLine] = useState(null);
+  
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
 
