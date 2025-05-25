@@ -97,7 +97,7 @@ function App() {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedSymbolId]);
+  }, []);
 
   const currentPageSymbols = placedSymbols.filter(symbol => symbol.page === currentPage);
 
