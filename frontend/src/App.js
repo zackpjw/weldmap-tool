@@ -492,7 +492,7 @@ function App() {
             )}
 
             {/* Export */}
-            {placedSymbols.length > 0 && (
+            {pdfImages.length > 0 && (
               <button
                 onClick={exportPDF}
                 className="px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700"
