@@ -52,13 +52,14 @@ function App() {
   };
 
   const handleWheel = useCallback((event) => {
-    // Only prevent default scrolling if mouse is over the canvas area
-    if (event.target.closest('.pdf-editor-canvas')) {
+    // Only prevent default scrolling if mouse is over the PDF canvas area
+    if (isMouseOverPDF) {
       event.preventDefault();
       const delta = event.deltaY > 0 ? 0.9 : 1.1;
       setZoomLevel(prev => Math.min(Math.max(prev * delta, 0.2), 5));
     }
-  }, []);
+    // If mouse is not over PDF, allow normal page scrolling
+  }, [isMouseOverPDF]);
 
   const handleMouseDown = useCallback((event) => {
     if (event.button === 1 || (event.button === 0 && event.ctrlKey)) { // Middle mouse or Ctrl+left
