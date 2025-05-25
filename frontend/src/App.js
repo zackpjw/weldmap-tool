@@ -178,11 +178,14 @@ function App() {
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const x = (event.clientX - rect.left) * scaleX;
-    const y = (event.clientY - rect.top) * scaleY;
+    
+    // Get raw coordinates relative to canvas
+    const rawX = event.clientX - rect.left;
+    const rawY = event.clientY - rect.top;
+    
+    // Convert to canvas space accounting for zoom and pan
+    const x = (rawX - panOffset.x) / zoomLevel;
+    const y = (rawY - panOffset.y) / zoomLevel;
 
     return { x, y };
   };
