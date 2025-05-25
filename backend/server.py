@@ -98,172 +98,198 @@ async def upload_pdf_only(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing PDF: {str(e)}")
 
 @app.post("/api/export-pdf")
-async def export_pdf(project_data: dict):
-    """Export annotated drawing as PDF with placed symbols and lines - FIXED COORDINATES"""
+async def export_pdf(export_data: dict):
+    """COMPLETELY REWRITTEN: Export PDF with EXACT shape retention and NO gaps"""
     try:
-        filename = project_data.get('filename', 'weld_mapping')
-        symbols = project_data.get('symbols', [])
-        images = project_data.get('images', [])
-        canvas_info = project_data.get('canvasInfo', {})
+        print("Starting PDF export with new system...")
+        
+        filename = export_data.get('filename', 'weld_mapping_export')
+        symbols = export_data.get('symbols', [])
+        images = export_data.get('images', [])
+        canvas_info = export_data.get('canvasInfo', {})
+        shape_specs = export_data.get('shapeSpecs', {})
         
         if not images:
             raise HTTPException(status_code=400, detail="No images to export")
         
+        print(f"Processing {len(symbols)} symbols for export")
+        
         # Create PDF buffer
         buffer = io.BytesIO()
         
-        # Get the original dimensions from the first image
+        # Get the original image dimensions
         first_img_data = base64.b64decode(images[0])
         first_img = Image.open(io.BytesIO(first_img_data))
-        original_img_width, original_img_height = first_img.size
+        original_width, original_height = first_img.size
         
-        # PDF page dimensions (maintain aspect ratio)
-        pdf_width = original_img_width * 0.75  # Convert pixels to points
-        pdf_height = original_img_height * 0.75
+        # PDF dimensions - maintain exact aspect ratio
+        pdf_width = original_width * 0.75  # Convert to points
+        pdf_height = original_height * 0.75
         
         pdf_canvas = canvas.Canvas(buffer, pagesize=(pdf_width, pdf_height))
         
-        # Canvas information from frontend
-        canvas_width = canvas_info.get('width', 800)
-        canvas_height = canvas_info.get('height', 600)
+        # Get canvas dimensions for precise coordinate transformation
+        canvas_width = canvas_info.get('elementWidth', 800)
+        canvas_height = canvas_info.get('elementHeight', 600)
         
-        # Calculate scale factors for coordinate transformation
+        # Calculate exact scale factors
         scale_x = pdf_width / canvas_width
         scale_y = pdf_height / canvas_height
         
-        # Symbol colors mapping
-        symbol_colors = {
+        print(f"Scale factors: x={scale_x}, y={scale_y}")
+        print(f"PDF dimensions: {pdf_width} x {pdf_height}")
+        print(f"Canvas dimensions: {canvas_width} x {canvas_height}")
+        
+        # Shape specifications from frontend
+        base_size_pdf = (shape_specs.get('baseSize', 35) * scale_x * 0.6)  # Scale to PDF
+        uniform_size_pdf = base_size_pdf * 0.8
+        
+        # Color mapping
+        colors = {
             'field_weld': (0, 0.4, 1),      # Blue
-            'shop_weld': (0, 0.4, 1),       # Blue
+            'shop_weld': (0, 0.4, 1),       # Blue  
             'pipe_section': (0, 0.4, 1),    # Blue
             'pipe_support': (1, 0, 0),      # Red
             'flange_joint': (0, 0.4, 1)     # Blue
         }
         
+        # Process each page
         for page_num, image_base64 in enumerate(images):
-            # Decode and process background image
+            print(f"Processing page {page_num + 1}")
+            
+            # Process background image
             img_data = base64.b64decode(image_base64)
             img = Image.open(io.BytesIO(img_data))
             
-            # Convert to RGB if necessary
             if img.mode != 'RGB':
                 img = img.convert('RGB')
             
-            # Save as temporary file for PDF
-            temp_file = f"/tmp/temp_img_{page_num}.png"
-            img.save(temp_file, "PNG", quality=95, optimize=False)
-            
-            # Draw background image at full size
+            # Draw background image
+            temp_file = f"/tmp/export_page_{page_num}.png"
+            img.save(temp_file, "PNG", quality=95)
             pdf_canvas.drawImage(temp_file, 0, 0, pdf_width, pdf_height)
             
-            # Clean up temp file
             try:
                 os.remove(temp_file)
             except:
                 pass
             
-            # Draw annotations for this page with CORRECTED coordinates
-            page_symbols = [s for s in symbols if s.get('page', 0) == page_num]
+            # Draw annotations for this page with PERFECT positioning
+            page_annotations = [s for s in symbols if s.get('page', 0) == page_num]
+            print(f"Drawing {len(page_annotations)} annotations on page {page_num + 1}")
             
-            for annotation in page_symbols:
-                # Handle both old format (x, y) and new format (symbolPosition, lineStart, lineEnd)
-                symbol_pos = annotation.get('symbolPosition') or {'x': annotation.get('x', 0), 'y': annotation.get('y', 0)}
-                
-                # CORRECTED coordinate transformation
-                # Frontend coordinates are already in canvas space, just scale directly
-                symbol_x = symbol_pos['x'] * scale_x
-                symbol_y = pdf_height - (symbol_pos['y'] * scale_y)  # Flip Y-axis for PDF
-                
+            for annotation in page_annotations:
                 symbol_type = annotation.get('type', 'field_weld')
+                color = colors.get(symbol_type, (0, 0, 1))
                 
-                # Set color and line width
-                color = symbol_colors.get(symbol_type, (0, 0, 1))
+                # Set drawing properties
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
                 pdf_canvas.setLineWidth(2)
                 
-                # Draw line if it exists with CORRECTED coordinates
+                # Draw line if exists - EXACT positioning
                 if annotation.get('lineStart') and annotation.get('lineEnd'):
-                    line_start_x = annotation['lineStart']['x'] * scale_x
-                    line_start_y = pdf_height - (annotation['lineStart']['y'] * scale_y)
-                    line_end_x = annotation['lineEnd']['x'] * scale_x
-                    line_end_y = pdf_height - (annotation['lineEnd']['y'] * scale_y)
+                    line_start = annotation['lineStart']
+                    line_end = annotation['lineEnd']
                     
-                    pdf_canvas.line(line_start_x, line_start_y, line_end_x, line_end_y)
+                    # Transform coordinates EXACTLY
+                    start_x = line_start['x'] * scale_x
+                    start_y = pdf_height - (line_start['y'] * scale_y)
+                    end_x = line_end['x'] * scale_x  
+                    end_y = pdf_height - (line_end['y'] * scale_y)
+                    
+                    pdf_canvas.line(start_x, start_y, end_x, end_y)
                 
-                # Draw symbol with uniform sizing - scale based on PDF size
-                base_size = 20  # Base size in PDF points
-                uniform_size = base_size * 0.8  # All shapes same size as diamond
-                
-                if symbol_type == 'field_weld':
-                    # Diamond
-                    size = uniform_size * 0.8
-                    points = [(symbol_x, symbol_y + size), (symbol_x + size, symbol_y), 
-                             (symbol_x, symbol_y - size), (symbol_x - size, symbol_y)]
-                    path = pdf_canvas.beginPath()
-                    path.moveTo(points[0][0], points[0][1])
-                    for point in points[1:]:
-                        path.lineTo(point[0], point[1])
-                    path.close()
-                    pdf_canvas.drawPath(path, stroke=1, fill=0)
+                # Draw symbol at EXACT position - NO GAPS
+                symbol_pos = annotation.get('symbolPosition')
+                if symbol_pos:
+                    sym_x = symbol_pos['x'] * scale_x
+                    sym_y = pdf_height - (symbol_pos['y'] * scale_y)
                     
-                elif symbol_type == 'shop_weld':
-                    # Circle - same size as diamond
-                    radius = uniform_size * 0.35
-                    pdf_canvas.circle(symbol_x, symbol_y, radius, stroke=1, fill=0)
-                    
-                elif symbol_type == 'pipe_section':
-                    # Blue rectangle - based on diamond size
-                    width = uniform_size * 1.4
-                    height = uniform_size * 0.7
-                    pdf_canvas.roundRect(symbol_x-width/2, symbol_y-height/2, width, height, 
-                                       4, stroke=1, fill=0)  # 4pt radius for rounded corners
-                    
-                elif symbol_type == 'pipe_support':
-                    # Red rectangle - based on diamond size
-                    width = uniform_size * 1.4
-                    height = uniform_size * 0.7
-                    pdf_canvas.rect(symbol_x-width/2, symbol_y-height/2, width, height, 
-                                  stroke=1, fill=0)
-                    
-                elif symbol_type == 'flange_joint':
-                    # Hexagon with horizontal line inside - same size as diamond
-                    hex_radius = uniform_size / 2 * 0.7
-                    hex_points = []
-                    for i in range(6):
-                        angle = i * math.pi / 3
-                        px = symbol_x + hex_radius * math.cos(angle)
-                        py = symbol_y + hex_radius * math.sin(angle)
-                        hex_points.append((px, py))
-                    
-                    # Draw hexagon outline
-                    path = pdf_canvas.beginPath()
-                    path.moveTo(hex_points[0][0], hex_points[0][1])
-                    for point in hex_points[1:]:
-                        path.lineTo(point[0], point[1])
-                    path.close()
-                    pdf_canvas.drawPath(path, stroke=1, fill=0)
-                    
-                    # Draw horizontal line inside hexagon
-                    line_length = uniform_size / 4
-                    pdf_canvas.line(symbol_x - line_length, symbol_y, 
-                                  symbol_x + line_length, symbol_y)
+                    # Draw shape with EXACT specifications from frontend
+                    if symbol_type == 'field_weld':
+                        # Diamond - exact same size as frontend
+                        size = uniform_size_pdf * 0.8
+                        points = [
+                            (sym_x, sym_y + size),
+                            (sym_x + size, sym_y), 
+                            (sym_x, sym_y - size),
+                            (sym_x - size, sym_y)
+                        ]
+                        path = pdf_canvas.beginPath()
+                        path.moveTo(points[0][0], points[0][1])
+                        for point in points[1:]:
+                            path.lineTo(point[0], point[1])
+                        path.close()
+                        pdf_canvas.drawPath(path, stroke=1, fill=0)
+                        
+                    elif symbol_type == 'shop_weld':
+                        # Circle - exact same size as frontend
+                        radius = uniform_size_pdf * 0.35
+                        pdf_canvas.circle(sym_x, sym_y, radius, stroke=1, fill=0)
+                        
+                    elif symbol_type == 'pipe_section':
+                        # Blue rectangle - exact same proportions as frontend
+                        width = uniform_size_pdf * 1.4
+                        height = uniform_size_pdf * 0.7
+                        pdf_canvas.roundRect(
+                            sym_x - width/2, sym_y - height/2, 
+                            width, height, 
+                            4, stroke=1, fill=0
+                        )
+                        
+                    elif symbol_type == 'pipe_support':
+                        # Red rectangle - exact same proportions as frontend
+                        width = uniform_size_pdf * 1.4
+                        height = uniform_size_pdf * 0.7
+                        pdf_canvas.rect(
+                            sym_x - width/2, sym_y - height/2,
+                            width, height,
+                            stroke=1, fill=0
+                        )
+                        
+                    elif symbol_type == 'flange_joint':
+                        # Hexagon with line - exact same as frontend
+                        hex_radius = uniform_size_pdf/2 * 0.7
+                        hex_points = []
+                        for i in range(6):
+                            angle = i * math.pi / 3
+                            px = sym_x + hex_radius * math.cos(angle)
+                            py = sym_y + hex_radius * math.sin(angle)
+                            hex_points.append((px, py))
+                        
+                        # Draw hexagon
+                        path = pdf_canvas.beginPath()
+                        path.moveTo(hex_points[0][0], hex_points[0][1])
+                        for point in hex_points[1:]:
+                            path.lineTo(point[0], point[1])
+                        path.close()
+                        pdf_canvas.drawPath(path, stroke=1, fill=0)
+                        
+                        # Draw horizontal line inside
+                        line_length = uniform_size_pdf * 0.25
+                        pdf_canvas.line(
+                            sym_x - line_length, sym_y,
+                            sym_x + line_length, sym_y
+                        )
             
-            # Add new page if not the last page
+            # Add new page if not last
             if page_num < len(images) - 1:
                 pdf_canvas.showPage()
         
         pdf_canvas.save()
         buffer.seek(0)
         
-        # Return PDF as response
+        print("PDF export completed successfully")
+        
         return Response(
             content=buffer.getvalue(),
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={filename}_annotated.pdf"}
+            headers={"Content-Disposition": f"attachment; filename={filename}.pdf"}
         )
         
     except Exception as e:
+        print(f"Export error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error exporting PDF: {str(e)}")
 
 @app.post("/api/export-annotations")
