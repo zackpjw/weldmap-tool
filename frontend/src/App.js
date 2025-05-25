@@ -630,10 +630,10 @@ function App() {
             </div>
 
             {/* Main Editor Area */}
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 h-[600px]">
               {/* PDF Editor Canvas - Left Side */}
-              <div className="flex-1 bg-white rounded-xl shadow-lg">
-                <div className="p-4 border-b border-gray-200">
+              <div className="flex-1 bg-white rounded-xl shadow-lg flex flex-col">
+                <div className="p-4 border-b border-gray-200 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-800">
                       PDF Editor
@@ -662,9 +662,9 @@ function App() {
                   </div>
                 </div>
 
-                <div className="p-4">
+                <div className="flex-1 p-4 overflow-hidden">
                   <div 
-                    className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas"
+                    className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas h-full"
                     onMouseEnter={handlePDFMouseEnter}
                     onMouseLeave={handlePDFMouseLeave}
                   >
@@ -672,7 +672,7 @@ function App() {
                       ref={canvasRef}
                       width={800}
                       height={600}
-                      className="w-full h-auto"
+                      className="w-full h-full object-contain"
                       onClick={handleCanvasClick}
                       onDragOver={handleCanvasDragOver}
                       onDrop={handleCanvasDrop}
@@ -684,9 +684,7 @@ function App() {
                         backgroundSize: `${100 * zoomLevel}%`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
-                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer',
-                        width: '100%',
-                        height: 'auto'
+                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer'
                       }}
                     />
                     
