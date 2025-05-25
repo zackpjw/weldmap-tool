@@ -404,89 +404,111 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Interactive Weld Mapping Tool
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Drag and drop weld symbols exactly where you need them
-              </p>
+        {/* Header Section */}
+        <div className="bg-white shadow-md border-b h-[50px] flex items-center px-6">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-xl font-bold text-gray-800">🔧 Interactive Weld Mapping Tool</h1>
+              
+              {/* File Upload */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                📁 Upload PDF
+              </button>
             </div>
-            <div className="flex space-x-3">
+
+            <div className="flex items-center space-x-3">
+              {/* Zoom Controls */}
               {pdfImages.length > 0 && (
                 <>
-                  {/* Zoom Controls */}
-                  <div className="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2">
+                  <div className="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-1">
                     <button
-                      onClick={zoomOut}
-                      className="px-2 py-1 bg-white rounded hover:bg-gray-50 transition-colors"
-                      title="Zoom Out"
+                      onClick={() => setZoomLevel(prev => Math.max(prev * 0.8, 0.2))}
+                      className="px-2 py-0.5 bg-white rounded text-xs hover:bg-gray-50"
                     >
-                      🔍-
+                      -
                     </button>
-                    <span className="text-sm font-medium text-gray-700 min-w-[60px] text-center">
+                    <span className="text-xs text-gray-700 min-w-[60px] text-center">
                       {Math.round(zoomLevel * 100)}%
                     </span>
                     <button
-                      onClick={zoomIn}
-                      className="px-2 py-1 bg-white rounded hover:bg-gray-50 transition-colors"
-                      title="Zoom In"
+                      onClick={() => setZoomLevel(prev => Math.min(prev * 1.2, 5))}
+                      className="px-2 py-0.5 bg-white rounded text-xs hover:bg-gray-50"
                     >
-                      🔍+
-                    </button>
-                    <button
-                      onClick={resetZoom}
-                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
-                      title="Reset Zoom"
-                    >
-                      Reset
+                      +
                     </button>
                   </div>
-                  
                   <button
-                    onClick={() => setIsDrawingMode(!isDrawingMode)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      isDrawingMode 
-                        ? 'bg-red-600 text-white hover:bg-red-700' 
-                        : 'bg-gray-600 text-white hover:bg-gray-700'
-                    }`}
+                    onClick={resetZoom}
+                    className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300"
                   >
-                    {isDrawingMode ? '✏️ Remove Mode' : '🎯 Place Mode'}
-                  </button>
-                  <button
-                    onClick={() => setShowSaveDialog(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    💾 Save Project
-                  </button>
-                  <button
-                    onClick={exportToPDF}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-                  >
-                    📄 Export PDF
-                  </button>
-                  <button
-                    onClick={clearAllSymbols}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                  >
-                    🗑️ Clear All
+                    Reset
                   </button>
                 </>
               )}
-              <button
-                onClick={() => setShowLoadDialog(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                📂 Load Project
-              </button>
+
+              {/* Drawing Mode Toggle */}
+              {pdfImages.length > 0 && (
+                <button
+                  onClick={() => setIsDrawingMode(!isDrawingMode)}
+                  className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    isDrawingMode 
+                      ? 'bg-red-600 text-white hover:bg-red-700' 
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isDrawingMode ? '✂️ Remove' : '✏️ Place'}
+                </button>
+              )}
+
+              {/* Save/Load Project */}
+              {pdfImages.length > 0 && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setShowSaveDialog(true)}
+                    className="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700"
+                  >
+                    💾 Save
+                  </button>
+                  
+                  {savedProjects.length > 0 && (
+                    <select
+                      onChange={(e) => e.target.value && loadProject(e.target.value)}
+                      className="px-2 py-1 border border-gray-300 rounded text-xs"
+                      value=""
+                    >
+                      <option value="">📂 Load Project</option>
+                      {savedProjects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+
+              {/* Export */}
+              {placedSymbols.length > 0 && (
+                <button
+                  onClick={exportPDF}
+                  className="px-2 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700"
+                >
+                  📤 Export PDF
+                </button>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Upload Section */}
