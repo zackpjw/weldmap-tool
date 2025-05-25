@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 class WeldMappingAPITester:
-    def __init__(self, base_url="https://45b4a450-e70c-45ba-a028-4de54af09736.preview.emergentagent.com"):
+    def __init__(self, base_url="https://76bc3e74-4f74-46aa-beb2-e7031504ecb0.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
