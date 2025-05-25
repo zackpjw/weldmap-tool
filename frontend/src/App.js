@@ -252,6 +252,20 @@ function App() {
     setSelectedSymbolId(null);
   };
 
+  const startNewProject = () => {
+    setPlacedSymbols([]);
+    setSelectedSymbolId(null);
+    setPdfImages([]);
+    setSelectedFile(null);
+    setCurrentPage(0);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const exportToPDF = async () => {
     if (pdfImages.length === 0) return;
 
