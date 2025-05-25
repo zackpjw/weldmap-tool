@@ -456,27 +456,62 @@ function App() {
     setError(null);
   };
 
-  // Export functionality
+  // Export functionality - COMPLETELY REWRITTEN
   const exportPDF = async () => {
     try {
-      // Get actual canvas dimensions for accurate coordinate transformation
+      console.log('Starting PDF export...');
+      
+      // Get actual canvas information for precise export
       const canvas = canvasRef.current;
+      if (!canvas) {
+        throw new Error('Canvas not available');
+      }
+      
       const canvasRect = canvas.getBoundingClientRect();
       
-      // Prepare data with accurate coordinate information
+      // Prepare export data with all necessary information for perfect matching
       const exportData = {
-        symbols: placedSymbols,
+        symbols: placedSymbols.map(symbol => ({
+          ...symbol,
+          // Ensure all coordinate data is properly structured
+          id: symbol.id,
+          type: symbol.type,
+          page: symbol.page,
+          lineStart: symbol.lineStart,
+          lineEnd: symbol.lineEnd,
+          symbolPosition: symbol.symbolPosition
+        })),
         images: pdfImages,
-        filename: 'weld_mapping',
+        filename: 'weld_mapping_export',
         canvasInfo: {
-          width: canvas.width,
-          height: canvas.height,
-          displayWidth: canvasRect.width,
-          displayHeight: canvasRect.height,
-          zoomLevel: zoomLevel,
-          panOffset: panOffset
+          // Canvas element properties
+          elementWidth: canvas.width,
+          elementHeight: canvas.height,
+          // Displayed canvas size
+          displayedWidth: canvasRect.width,
+          displayedHeight: canvasRect.height,
+          // Current view state
+          currentZoom: zoomLevel,
+          currentPan: panOffset,
+          // Additional context
+          devicePixelRatio: window.devicePixelRatio || 1
+        },
+        // Include shape specifications for exact reproduction
+        shapeSpecs: {
+          baseSize: 35,
+          uniformSize: 35 * 0.8,
+          diamond: { sizeMultiplier: 0.8 },
+          circle: { radiusMultiplier: 0.35 },
+          blueRect: { widthMultiplier: 1.4, heightMultiplier: 0.7, borderRadius: 8 },
+          redRect: { widthMultiplier: 1.4, heightMultiplier: 0.7 },
+          hexagon: { radiusMultiplier: 0.7, lineLength: 0.25 }
         }
       };
+
+      console.log('Export data prepared:', {
+        symbolCount: exportData.symbols.length,
+        canvasInfo: exportData.canvasInfo
+      });
 
       const response = await fetch(`${API_BASE_URL}/api/export-pdf`, {
         method: 'POST',
@@ -487,22 +522,25 @@ function App() {
       });
 
       if (!response.ok) {
-        throw new Error('Export failed');
+        const errorText = await response.text();
+        throw new Error(`Export failed: ${response.status} - ${errorText}`);
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'annotated_drawing.pdf';
+      link.download = 'weld_mapping_annotated.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      console.log('PDF export completed successfully');
 
     } catch (error) {
-      console.error('Export error:', error);
-      setError('Failed to export PDF. Please try again.');
+      console.error('PDF export error:', error);
+      setError(`Failed to export PDF: ${error.message}`);
     }
   };
 
