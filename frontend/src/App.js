@@ -563,322 +563,354 @@ function App() {
           </div>
         )}
 
-        {/* Interactive Workspace */}
+        {/* Professional PDF Editor Layout */}
         {pdfImages.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Symbol Palette */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-lg p-6 sticky top-8">
-                {/* New Project Button */}
-                <div className="mb-4">
+          <div className="space-y-4">
+            {/* Top Toolbar - Symbol Palette */}
+            <div className="bg-white rounded-xl shadow-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Weld Symbol Palette</h3>
+                <button
+                  onClick={startNewProject}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                >
+                  🆕 New Project
+                </button>
+              </div>
+              
+              {/* Horizontal Symbol Palette */}
+              <div className="flex space-x-3">
+                {Object.entries(symbolTypes).map(([key, symbol]) => (
                   <button
-                    onClick={startNewProject}
-                    className="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                    key={key}
+                    onClick={() => setSelectedSymbolType(key)}
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      selectedSymbolType === key
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
-                    🆕 New Project
-                  </button>
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Start fresh with a new drawing
-                  </p>
-                </div>
-
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Weld Symbol Palette</h3>
-                
-                <div className="space-y-3 mb-6">
-                  {Object.entries(symbolTypes).map(([key, symbol]) => (
-                    <button
-                      key={key}
-                      onClick={() => setSelectedSymbolType(key)}
-                      className={`w-full p-3 rounded-lg border-2 transition-all ${
-                        selectedSymbolType === key
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span 
-                          className="text-2xl"
-                          style={{ color: symbol.color }}
-                        >
-                          {symbol.shape}
-                        </span>
-                        <div className="text-left">
-                          <p className="font-medium text-sm text-gray-800">{symbol.name}</p>
-                          <p className="text-xs text-gray-600">{symbol.description}</p>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-medium text-gray-700 mb-2">Instructions:</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Select symbol type</li>
-                    <li>• Click on drawing to place</li>
-                    <li>• <strong>Symbols can overlap</strong> freely</li>
-                    <li>• Click symbol to select</li>
-                    <li>• Drag symbols to move</li>
-                    <li>• Delete/Backspace to remove selected</li>
-                    <li>• Use zoom controls or scroll wheel</li>
-                    <li>• Ctrl+click to pan drawing</li>
-                    <li>• 🆕 New Project to start fresh</li>
-                  </ul>
-                </div>
-
-                {currentPageSymbols.length > 0 && (
-                  <div className="border-t pt-4 mt-4">
-                    <h4 className="font-medium text-gray-700 mb-2">
-                      Current Page Symbols ({currentPageSymbols.length})
-                    </h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {currentPageSymbols.map((symbol) => (
-                        <div 
-                          key={symbol.id}
-                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <span style={{ color: symbolTypes[symbol.type].color }}>
-                              {symbolTypes[symbol.type].shape}
-                            </span>
-                            <span className="text-xs text-gray-600">
-                              ({Math.round(symbol.x)}, {Math.round(symbol.y)})
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => removeSymbol(symbol.id)}
-                            className="text-red-500 hover:text-red-700 text-xs"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
+                    <div className="flex flex-col items-center space-y-1">
+                      <span 
+                        className="text-2xl"
+                        style={{ color: symbol.color }}
+                      >
+                        {symbol.shape}
+                      </span>
+                      <p className="text-xs font-medium text-gray-800">{symbol.name}</p>
                     </div>
-                  </div>
-                )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Instructions */}
+              <div className="mt-3 text-xs text-gray-600 text-center">
+                Click to select symbol • Click on drawing to place • Symbols can overlap • Click symbol to select • Delete/Backspace to remove
               </div>
             </div>
 
-            {/* Drawing Canvas */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    Drawing Canvas
-                  </h3>
-                  {pdfImages.length > 1 && (
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                        disabled={currentPage === 0}
-                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <span className="text-sm text-gray-600">
-                        Page {currentPage + 1} of {pdfImages.length}
-                      </span>
-                      <button
-                        onClick={() => setCurrentPage(Math.min(pdfImages.length - 1, currentPage + 1))}
-                        disabled={currentPage === pdfImages.length - 1}
-                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  )}
+            {/* Main Editor Area */}
+            <div className="flex space-x-4">
+              {/* PDF Editor Canvas - Left Side */}
+              <div className="flex-1 bg-white rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      PDF Editor
+                    </h3>
+                    {pdfImages.length > 1 && (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                          disabled={currentPage === 0}
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+                        >
+                          Previous
+                        </button>
+                        <span className="text-sm text-gray-600">
+                          Page {currentPage + 1} of {pdfImages.length}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(Math.min(pdfImages.length - 1, currentPage + 1))}
+                          disabled={currentPage === pdfImages.length - 1}
+                          className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="relative border-2 border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                  <canvas
-                    ref={canvasRef}
-                    width={800}
-                    height={600}
-                    className="w-full h-auto"
-                    onClick={handleCanvasClick}
-                    onDragOver={handleCanvasDragOver}
-                    onDrop={handleCanvasDrop}
-                    onWheel={handleWheel}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    style={{
-                      backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
-                      backgroundSize: `${100 * zoomLevel}%`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
-                      cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer',
-                      width: '100%',
-                      height: 'auto'
-                    }}
-                  />
-                  
-                  {/* Render placed symbols with zoom scaling */}
-                  {currentPageSymbols.map((symbol) => {
-                    // Create custom SVG symbols for proper shapes and sizes
-                    const renderSymbol = (type, isSelected = false) => {
-                      const baseSize = 25; // Base size
-                      // Reduce size by 10% for all shapes except flange
-                      const size = type === 'flange_joint' ? baseSize : baseSize * 0.9;
-                      const strokeWidth = 3;
-                      const color = symbolTypes[type].color;
-                      
-                      const getSymbolSVG = () => {
-                        switch (type) {
-                          case 'field_weld':
-                            // Rotated square (45 degrees)
-                            return (
-                              <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
-                                <rect 
-                                  x={size / 2} 
-                                  y={size / 2} 
-                                  width={size} 
-                                  height={size} 
-                                  fill="none" 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                              </svg>
-                            );
-                          case 'shop_weld':
-                            // Circle
-                            return (
-                              <svg width={size * 2} height={size * 2}>
-                                <circle 
-                                  cx={size} 
-                                  cy={size} 
-                                  r={size / 2} 
-                                  fill="none" 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                              </svg>
-                            );
-                          case 'pipe_section':
-                            // Rounded rectangle - stretched horizontally by 12%
-                            const pipeWidth = size * 2.24; // 2 * 1.12 = 12% longer
-                            return (
-                              <svg width={pipeWidth} height={size}>
-                                <rect 
-                                  x={strokeWidth / 2} 
-                                  y={strokeWidth / 2} 
-                                  width={pipeWidth - strokeWidth} 
-                                  height={size - strokeWidth} 
-                                  rx={8} 
-                                  ry={8} 
-                                  fill="none" 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                              </svg>
-                            );
-                          case 'pipe_support':
-                            // Rectangle (not rounded) - stretched horizontally by 12%
-                            const supportWidth = size * 2.24; // 2 * 1.12 = 12% longer
-                            return (
-                              <svg width={supportWidth} height={size}>
-                                <rect 
-                                  x={strokeWidth / 2} 
-                                  y={strokeWidth / 2} 
-                                  width={supportWidth - strokeWidth} 
-                                  height={size - strokeWidth} 
-                                  fill="none" 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                              </svg>
-                            );
-                          case 'flange_joint':
-                            // Hexagon rotated 90 degrees clockwise from previous (total 180 degrees) with horizontal center line, 10% larger
-                            const flangeSize = size * 1.1; // 10% larger
-                            return (
-                              <svg width={flangeSize * 2} height={flangeSize * 2} style={{ transform: 'rotate(180deg)' }}>
-                                <polygon 
-                                  points={`${flangeSize + flangeSize/2 * Math.cos(0)},${flangeSize + flangeSize/2 * Math.sin(0)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(2*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(2*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI)},${flangeSize + flangeSize/2 * Math.sin(Math.PI)} ${flangeSize + flangeSize/2 * Math.cos(4*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(4*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(5*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(5*Math.PI/3)}`}
-                                  fill="none" 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                                <line 
-                                  x1={flangeSize - flangeSize/2} 
-                                  y1={flangeSize} 
-                                  x2={flangeSize + flangeSize/2} 
-                                  y2={flangeSize} 
-                                  stroke={color} 
-                                  strokeWidth={strokeWidth}
-                                />
-                              </svg>
-                            );
-                          default:
-                            return null;
-                        }
+                <div className="p-4">
+                  <div className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas">
+                    <canvas
+                      ref={canvasRef}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto"
+                      onClick={handleCanvasClick}
+                      onDragOver={handleCanvasDragOver}
+                      onDrop={handleCanvasDrop}
+                      onWheel={handleWheel}
+                      onMouseDown={handleMouseDown}
+                      onMouseMove={handleMouseMove}
+                      onMouseUp={handleMouseUp}
+                      onMouseLeave={handleMouseUp}
+                      style={{
+                        backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
+                        backgroundSize: `${100 * zoomLevel}%`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
+                        cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer',
+                        width: '100%',
+                        height: 'auto'
+                      }}
+                    />
+                    
+                    {/* Render placed symbols with zoom scaling */}
+                    {currentPageSymbols.map((symbol) => {
+                      // Create custom SVG symbols for proper shapes and sizes
+                      const renderSymbol = (type, isSelected = false) => {
+                        const baseSize = 25; // Base size
+                        // Reduce size by 10% for all shapes except flange
+                        const size = type === 'flange_joint' ? baseSize : baseSize * 0.9;
+                        const strokeWidth = 3;
+                        const color = symbolTypes[type].color;
+                        
+                        const getSymbolSVG = () => {
+                          switch (type) {
+                            case 'field_weld':
+                              // Rotated square (45 degrees)
+                              return (
+                                <svg width={size * 2} height={size * 2} style={{ transform: 'rotate(45deg)' }}>
+                                  <rect 
+                                    x={size / 2} 
+                                    y={size / 2} 
+                                    width={size} 
+                                    height={size} 
+                                    fill="none" 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                            case 'shop_weld':
+                              // Circle
+                              return (
+                                <svg width={size * 2} height={size * 2}>
+                                  <circle 
+                                    cx={size} 
+                                    cy={size} 
+                                    r={size / 2} 
+                                    fill="none" 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                            case 'pipe_section':
+                              // Rounded rectangle - stretched horizontally by 12%
+                              const pipeWidth = size * 2.24; // 2 * 1.12 = 12% longer
+                              return (
+                                <svg width={pipeWidth} height={size}>
+                                  <rect 
+                                    x={strokeWidth / 2} 
+                                    y={strokeWidth / 2} 
+                                    width={pipeWidth - strokeWidth} 
+                                    height={size - strokeWidth} 
+                                    rx={8} 
+                                    ry={8} 
+                                    fill="none" 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                            case 'pipe_support':
+                              // Rectangle (not rounded) - stretched horizontally by 12%
+                              const supportWidth = size * 2.24; // 2 * 1.12 = 12% longer
+                              return (
+                                <svg width={supportWidth} height={size}>
+                                  <rect 
+                                    x={strokeWidth / 2} 
+                                    y={strokeWidth / 2} 
+                                    width={supportWidth - strokeWidth} 
+                                    height={size - strokeWidth} 
+                                    fill="none" 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                            case 'flange_joint':
+                              // Hexagon rotated 90 degrees clockwise from previous (total 180 degrees) with horizontal center line, 10% larger
+                              const flangeSize = size * 1.1; // 10% larger
+                              return (
+                                <svg width={flangeSize * 2} height={flangeSize * 2} style={{ transform: 'rotate(180deg)' }}>
+                                  <polygon 
+                                    points={`${flangeSize + flangeSize/2 * Math.cos(0)},${flangeSize + flangeSize/2 * Math.sin(0)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(2*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(2*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(Math.PI)},${flangeSize + flangeSize/2 * Math.sin(Math.PI)} ${flangeSize + flangeSize/2 * Math.cos(4*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(4*Math.PI/3)} ${flangeSize + flangeSize/2 * Math.cos(5*Math.PI/3)},${flangeSize + flangeSize/2 * Math.sin(5*Math.PI/3)}`}
+                                    fill="none" 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                  <line 
+                                    x1={flangeSize - flangeSize/2} 
+                                    y1={flangeSize} 
+                                    x2={flangeSize + flangeSize/2} 
+                                    y2={flangeSize} 
+                                    stroke={color} 
+                                    strokeWidth={strokeWidth}
+                                  />
+                                </svg>
+                              );
+                            default:
+                              return null;
+                          }
+                        };
+
+                        return (
+                          <div className="relative">
+                            {getSymbolSVG()}
+                            {isSelected && (
+                              <div 
+                                className="absolute inset-0 border border-black rounded"
+                                style={{
+                                  transform: 'translate(-3px, -3px)',
+                                  width: 'calc(100% + 6px)',
+                                  height: 'calc(100% + 6px)',
+                                  borderWidth: '1px',
+                                  borderStyle: 'solid',
+                                  borderColor: 'black',
+                                  backgroundColor: 'transparent',
+                                  pointerEvents: 'none'
+                                }}
+                              />
+                            )}
+                          </div>
+                        );
                       };
 
                       return (
-                        <div className="relative">
-                          {getSymbolSVG()}
-                          {isSelected && (
-                            <div 
-                              className="absolute inset-0 border border-black rounded"
-                              style={{
-                                transform: 'translate(-3px, -3px)',
-                                width: 'calc(100% + 6px)',
-                                height: 'calc(100% + 6px)',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                borderColor: 'black',
-                                backgroundColor: 'transparent',
-                                pointerEvents: 'none'
-                              }}
-                            />
-                          )}
+                        <div
+                          key={symbol.id}
+                          className="absolute cursor-move hover:scale-110 transition-transform"
+                          style={{
+                            left: (symbol.x * zoomLevel + panOffset.x) - 25,
+                            top: (symbol.y * zoomLevel + panOffset.y) - 25,
+                            zIndex: 10,
+                            pointerEvents: 'auto',
+                            transform: `scale(${zoomLevel})`
+                          }}
+                          draggable
+                          onDragStart={(e) => handleSymbolDragStart(e, symbol.id)}
+                          onDragEnd={handleSymbolDragEnd}
+                          onDoubleClick={() => removeSymbol(symbol.id)}
+                          title={`${symbolTypes[symbol.type].name} - Double-click to remove`}
+                        >
+                          {renderSymbol(symbol.type, selectedSymbolId === symbol.id)}
                         </div>
                       );
-                    };
-
-                    return (
-                      <div
-                        key={symbol.id}
-                        className="absolute cursor-move hover:scale-110 transition-transform"
-                        style={{
-                          left: (symbol.x * zoomLevel + panOffset.x) - 25,
-                          top: (symbol.y * zoomLevel + panOffset.y) - 25,
-                          zIndex: 10,
-                          pointerEvents: 'auto',
-                          transform: `scale(${zoomLevel})`
-                        }}
-                        draggable
-                        onDragStart={(e) => handleSymbolDragStart(e, symbol.id)}
-                        onDragEnd={handleSymbolDragEnd}
-                        onDoubleClick={() => removeSymbol(symbol.id)}
-                        title={`${symbolTypes[symbol.type].name} - Double-click to remove`}
-                      >
-                        {renderSymbol(symbol.type, selectedSymbolId === symbol.id)}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4 text-sm text-gray-600">
-                  <div className="flex justify-between items-center">
-                    <p>
-                      <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
-                    </p>
-                    <p>
-                      <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
-                    </p>
+                    })}
                   </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <p className="text-xs text-gray-500">
-                      💡 Tip: Use mouse wheel to zoom, Ctrl+click to pan, or use the zoom controls above
-                    </p>
-                    {selectedSymbolId && (
-                      <p className="text-xs text-blue-600 font-medium">
-                        ✨ Symbol selected - Press Delete/Backspace to remove, Esc to deselect
+
+                  <div className="mt-4 text-sm text-gray-600">
+                    <div className="flex justify-between items-center">
+                      <p>
+                        <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
                       </p>
-                    )}
+                      <p>
+                        <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-gray-500">
+                        💡 Tip: Use mouse wheel to zoom (inside PDF area), Ctrl+click to pan
+                      </p>
+                      {selectedSymbolId && (
+                        <p className="text-xs text-blue-600 font-medium">
+                          ✨ Symbol selected - Press Delete/Backspace to remove, Esc to deselect
+                        </p>
+                      )}
+                    </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Right Panel - Current Symbols */}
+              <div className="w-80 bg-white rounded-xl shadow-lg">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    Current Page Symbols ({currentPageSymbols.length})
+                  </h3>
+                </div>
+                
+                <div className="p-4">
+                  {currentPageSymbols.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">
+                      <div className="text-4xl mb-2">📐</div>
+                      <p>No symbols placed</p>
+                      <p className="text-xs">Select a symbol type and click on the drawing to place it</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {currentPageSymbols.map((symbol, index) => (
+                        <div 
+                          key={symbol.id}
+                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                            selectedSymbolId === symbol.id 
+                              ? 'border-blue-500 bg-blue-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <span 
+                              className="text-lg"
+                              style={{ color: symbolTypes[symbol.type].color }}
+                            >
+                              {symbolTypes[symbol.type].shape}
+                            </span>
+                            <div>
+                              <p className="font-medium text-sm text-gray-800">
+                                {symbolTypes[symbol.type].name}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                Position: ({Math.round(symbol.x)}, {Math.round(symbol.y)})
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => setSelectedSymbolId(symbol.id)}
+                              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                              title="Select symbol"
+                            >
+                              Select
+                            </button>
+                            <button
+                              onClick={() => removeSymbol(symbol.id)}
+                              className="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded"
+                              title="Remove symbol"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Symbol Management Actions */}
+                  {currentPageSymbols.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={clearAllSymbols}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        🗑️ Clear All Symbols
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
