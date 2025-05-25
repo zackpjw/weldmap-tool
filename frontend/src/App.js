@@ -1048,7 +1048,13 @@ function App() {
                           switch (selectedSymbolType) {
                             case 'field_weld': // Diamond
                               return (
-                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                  left: -uniformSize/2, 
+                                  top: -uniformSize/2,
+                                  margin: 0,
+                                  padding: 0,
+                                  border: 'none'
+                                }}>
                                   <polygon
                                     points={`${uniformSize/2},${(uniformSize-uniformSize*0.8)/2} ${uniformSize-(uniformSize-uniformSize*0.8)/2},${uniformSize/2} ${uniformSize/2},${uniformSize-(uniformSize-uniformSize*0.8)/2} ${(uniformSize-uniformSize*0.8)/2},${uniformSize/2}`}
                                     fill="none"
@@ -1061,7 +1067,13 @@ function App() {
                             case 'shop_weld': // Circle - same size as diamond
                               const radius = uniformSize * 0.35;
                               return (
-                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                  left: -uniformSize/2, 
+                                  top: -uniformSize/2,
+                                  margin: 0,
+                                  padding: 0,
+                                  border: 'none'
+                                }}>
                                   <circle
                                     cx={uniformSize/2}
                                     cy={uniformSize/2}
@@ -1078,7 +1090,13 @@ function App() {
                               const blueHeight = uniformSize * 0.7;
                               const borderRadius = 8;
                               return (
-                                <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
+                                <svg width={blueWidth} height={blueHeight} className="absolute" style={{ 
+                                  left: -blueWidth/2, 
+                                  top: -blueHeight/2,
+                                  margin: 0,
+                                  padding: 0,
+                                  border: 'none'
+                                }}>
                                   <rect
                                     x={strokeWidth/2}
                                     y={strokeWidth/2}
@@ -1097,7 +1115,13 @@ function App() {
                               const redWidth = uniformSize * 1.4;
                               const redHeight = uniformSize * 0.7;
                               return (
-                                <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
+                                <svg width={redWidth} height={redHeight} className="absolute" style={{ 
+                                  left: -redWidth/2, 
+                                  top: -redHeight/2,
+                                  margin: 0,
+                                  padding: 0,
+                                  border: 'none'
+                                }}>
                                   <rect
                                     x={strokeWidth/2}
                                     y={strokeWidth/2}
@@ -1119,7 +1143,13 @@ function App() {
                                 hexPoints.push(`${x},${y}`);
                               }
                               return (
-                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ left: -uniformSize/2, top: -uniformSize/2 }}>
+                                <svg width={uniformSize} height={uniformSize} className="absolute" style={{ 
+                                  left: -uniformSize/2, 
+                                  top: -uniformSize/2,
+                                  margin: 0,
+                                  padding: 0,
+                                  border: 'none'
+                                }}>
                                   <polygon
                                     points={hexPoints.join(' ')}
                                     fill="none"
