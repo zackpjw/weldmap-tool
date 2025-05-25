@@ -140,7 +140,7 @@ function App() {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload-pdf-only`, {
         method: 'POST',
         body: formData,
       });
