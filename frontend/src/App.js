@@ -317,14 +317,17 @@ function App() {
       );
 
       if (lineLength > 10) {
+        // Calculate the connection point on the shape
+        const connectionPoint = getShapeConnectionPoint(lineStart, { x, y }, selectedSymbolType);
+        
         // Create new annotation with line and symbol
         const newAnnotation = {
           id: Date.now(),
           type: selectedSymbolType,
           page: currentPage,
           lineStart: lineStart,
-          lineEnd: { x, y },
-          symbolPosition: { x, y } // Symbol at end of line
+          lineEnd: connectionPoint,
+          symbolPosition: { x, y } // Symbol at end point
         };
 
         setPlacedSymbols(prev => [...prev, newAnnotation]);
