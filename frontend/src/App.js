@@ -173,6 +173,23 @@ function App() {
   };
 
   // Canvas interaction functions
+  const getCanvasCoordinates = (event) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    
+    // Get raw coordinates relative to canvas
+    const rawX = event.clientX - rect.left;
+    const rawY = event.clientY - rect.top;
+    
+    // Convert to canvas space accounting for zoom and pan
+    const x = (rawX - panOffset.x) / zoomLevel;
+    const y = (rawY - panOffset.y) / zoomLevel;
+
+    return { x, y };
+  };
+
   // Calculate connection point on shape based on line direction
   const getShapeConnectionPoint = (lineStart, lineEnd, shapeType) => {
     const dx = lineEnd.x - lineStart.x;
