@@ -790,19 +790,24 @@ function App() {
                   <div className="text-sm text-gray-600">
                     <div className="flex justify-between items-center">
                       <p>
-                        <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Place Mode - Click to place ${symbolTypes[selectedSymbolType].name}`}
+                        <strong>Mode:</strong> {isDrawingMode ? 'Remove Mode - Click symbols to remove them' : `Drawing Mode - Click and drag to draw line with ${symbolTypes[selectedSymbolType].name}`}
                       </p>
                       <p>
-                        <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Symbols:</strong> {currentPageSymbols.length}
+                        <strong>Zoom:</strong> {Math.round(zoomLevel * 100)}% | <strong>Annotations:</strong> {currentPageSymbols.length}
                       </p>
                     </div>
                     <div className="flex justify-between items-center mt-1">
                       <p className="text-xs text-gray-500">
-                        💡 Tip: Mouse wheel to zoom (inside PDF area), Ctrl+click to pan
+                        💡 Tip: Mouse wheel to zoom (inside PDF area), Ctrl+click to pan, Click and drag to draw line
                       </p>
                       {selectedSymbolId && (
                         <p className="text-xs text-blue-600 font-medium">
-                          ✨ Symbol selected - Press Delete/Backspace to remove, Esc to deselect
+                          ✨ Annotation selected - Press Delete/Backspace to remove, Esc to deselect
+                        </p>
+                      )}
+                      {isDrawingLine && (
+                        <p className="text-xs text-green-600 font-medium">
+                          🎯 Drawing line - Drag to desired end point and release
                         </p>
                       )}
                     </div>
