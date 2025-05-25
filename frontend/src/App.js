@@ -202,34 +202,45 @@ function App() {
     let offsetX = 0;
     let offsetY = 0;
     
+    // All shapes now use the same size as diamond field weld
+    const uniformSize = shapeSize * 0.8; // Same as diamond size
+    
     // Calculate offset based on shape type and direction
     switch (shapeType) {
       case 'pipe_section': // Blue rectangle with rounded edges
       case 'pipe_support': // Red rectangle
-        const width = shapeSize * 1.4; // 40% wider than base (20% + 20% more)
-        const height = shapeSize * 0.55; // 50% of original height (1.1 * 0.5)
+        // Use diamond size for rectangles too, but maintain rectangular proportions
+        const rectWidth = uniformSize * 1.4; // Keep wider aspect
+        const rectHeight = uniformSize * 0.7; // Consistent height
         
         if (Math.abs(dx) > Math.abs(dy)) {
           // Horizontal line - connect to left or right side
-          offsetX = dx > 0 ? -width/2 : width/2;
+          offsetX = dx > 0 ? -rectWidth/2 : rectWidth/2;
           offsetY = 0;
         } else {
           // Vertical line - connect to top or bottom side
           offsetX = 0;
-          offsetY = dy > 0 ? -height/2 : height/2;
+          offsetY = dy > 0 ? -rectHeight/2 : rectHeight/2;
         }
         break;
         
-      case 'flange_joint': // Hexagon - connect closer to edge
-        const hexRadius = (shapeSize * 0.77) / 2; // 10% larger hexagon radius
+      case 'flange_joint': // Hexagon 
+        const hexRadius = uniformSize / 2; // Same radius as diamond
         offsetX = -Math.cos(angle) * hexRadius;
         offsetY = -Math.sin(angle) * hexRadius;
         break;
         
-      default: // Circular/diamond shapes
-        const radius = shapeSize/2;
-        offsetX = -Math.cos(angle) * radius;
-        offsetY = -Math.sin(angle) * radius;
+      case 'shop_weld': // Circle
+        const circleRadius = uniformSize / 2; // Same radius as diamond
+        offsetX = -Math.cos(angle) * circleRadius;
+        offsetY = -Math.sin(angle) * circleRadius;
+        break;
+        
+      case 'field_weld': // Diamond
+      default: 
+        const diamondRadius = uniformSize / 2; // Diamond radius
+        offsetX = -Math.cos(angle) * diamondRadius;
+        offsetY = -Math.sin(angle) * diamondRadius;
         break;
     }
     
