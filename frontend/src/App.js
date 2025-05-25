@@ -819,9 +819,9 @@ function App() {
                             <div 
                               className="absolute inset-0 border border-black rounded"
                               style={{
-                                transform: 'translate(-6px, -6px)',
-                                width: 'calc(100% + 12px)',
-                                height: 'calc(100% + 12px)',
+                                transform: 'translate(-3px, -3px)',
+                                width: 'calc(100% + 6px)',
+                                height: 'calc(100% + 6px)',
                                 borderWidth: '1px',
                                 borderStyle: 'solid',
                                 borderColor: 'black',
