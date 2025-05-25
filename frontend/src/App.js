@@ -827,54 +827,63 @@ function App() {
                   {currentPageSymbols.length === 0 ? (
                     <div className="text-center text-gray-500 py-8">
                       <div className="text-4xl mb-2">📐</div>
-                      <p>No symbols placed</p>
-                      <p className="text-xs">Select a symbol type and click on the drawing to place it</p>
+                      <p>No annotations placed</p>
+                      <p className="text-xs">Select a symbol type and click-drag on the drawing to create line annotations</p>
                     </div>
                   ) : (
                     <div className="space-y-2 h-full overflow-y-auto">
-                      {currentPageSymbols.map((symbol, index) => (
-                        <div 
-                          key={symbol.id}
-                          className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                            selectedSymbolId === symbol.id 
-                              ? 'border-blue-500 bg-blue-50' 
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            <span 
-                              className="text-lg"
-                              style={{ color: symbolTypes[symbol.type].color }}
-                            >
-                              {symbolTypes[symbol.type].shape}
-                            </span>
-                            <div>
-                              <p className="font-medium text-sm text-gray-800">
-                                {symbolTypes[symbol.type].name}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                Position: ({Math.round(symbol.x)}, {Math.round(symbol.y)})
-                              </p>
+                      {currentPageSymbols.map((annotation, index) => {
+                        // Handle both old format (x, y) and new format (symbolPosition)
+                        const symbolPos = annotation.symbolPosition || { x: annotation.x, y: annotation.y };
+                        const hasLine = annotation.lineStart && annotation.lineEnd;
+                        
+                        return (
+                          <div 
+                            key={annotation.id}
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                              selectedSymbolId === annotation.id 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span 
+                                className="text-lg"
+                                style={{ color: symbolTypes[annotation.type].color }}
+                              >
+                                {symbolTypes[annotation.type].shape}
+                              </span>
+                              <div>
+                                <p className="font-medium text-sm text-gray-800">
+                                  {symbolTypes[annotation.type].name}
+                                </p>
+                                <p className="text-xs text-gray-600">
+                                  {hasLine ? 'Line + Symbol' : 'Symbol only'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Position: ({Math.round(symbolPos.x)}, {Math.round(symbolPos.y)})
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => setSelectedSymbolId(annotation.id)}
+                                className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                                title="Select annotation"
+                              >
+                                Select
+                              </button>
+                              <button
+                                onClick={() => removeSymbol(annotation.id)}
+                                className="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded"
+                                title="Remove annotation"
+                              >
+                                ✕
+                              </button>
                             </div>
                           </div>
-                          <div className="flex space-x-1">
-                            <button
-                              onClick={() => setSelectedSymbolId(symbol.id)}
-                              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                              title="Select symbol"
-                            >
-                              Select
-                            </button>
-                            <button
-                              onClick={() => removeSymbol(symbol.id)}
-                              className="px-2 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 rounded"
-                              title="Remove symbol"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
