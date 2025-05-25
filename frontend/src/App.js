@@ -331,14 +331,15 @@ function App() {
   // Export functionality
   const exportPDF = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/export`, {
+      const response = await fetch(`${API_BASE_URL}/api/export-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           symbols: placedSymbols,
-          images: pdfImages
+          images: pdfImages,
+          filename: 'weld_mapping'
         }),
       });
 
