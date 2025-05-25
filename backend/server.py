@@ -99,7 +99,7 @@ async def upload_pdf_only(file: UploadFile = File(...)):
 
 @app.post("/api/export-pdf")
 async def export_pdf(project_data: dict):
-    """Export annotated drawing as PDF with placed symbols"""
+    """Export annotated drawing as PDF with placed symbols and lines"""
     try:
         filename = project_data.get('filename', 'weld_mapping')
         symbols = project_data.get('symbols', [])
@@ -154,61 +154,79 @@ async def export_pdf(project_data: dict):
             except:
                 pass
             
-            # Draw symbols for this page
+            # Draw annotations for this page
             page_symbols = [s for s in symbols if s.get('page', 0) == page_num]
             
-            for symbol in page_symbols:
-                x = symbol.get('x', 0) * (page_width / 800)  # Scale from canvas to PDF
-                y = (600 - symbol.get('y', 0)) * (page_height / 600)  # Flip Y and scale
-                symbol_type = symbol.get('type', 'field_weld')
+            for annotation in page_symbols:
+                # Handle both old format (x, y) and new format (symbolPosition, lineStart, lineEnd)
+                symbol_pos = annotation.get('symbolPosition') or {'x': annotation.get('x', 0), 'y': annotation.get('y', 0)}
+                
+                # Transform coordinates from frontend canvas to PDF
+                symbol_x = symbol_pos['x'] * (page_width / 800)  # Scale from 800px canvas width
+                symbol_y = (600 - symbol_pos['y']) * (page_height / 600)  # Flip Y and scale from 600px canvas height
+                
+                symbol_type = annotation.get('type', 'field_weld')
                 
                 # Set color
                 color = symbol_colors.get(symbol_type, (0, 0, 1))
                 pdf_canvas.setStrokeColorRGB(*color)
                 pdf_canvas.setFillColorRGB(*color)
+                pdf_canvas.setLineWidth(2)
                 
-                # Draw symbol based on type - 10% smaller for all except flange
-                base_size = 15
-                # Reduce size by 10% for all shapes except flange
-                symbol_size = base_size if symbol_type == 'flange_joint' else base_size * 0.9
+                # Draw line if it exists
+                if annotation.get('lineStart') and annotation.get('lineEnd'):
+                    line_start_x = annotation['lineStart']['x'] * (page_width / 800)
+                    line_start_y = (600 - annotation['lineStart']['y']) * (page_height / 600)
+                    line_end_x = annotation['lineEnd']['x'] * (page_width / 800)
+                    line_end_y = (600 - annotation['lineEnd']['y']) * (page_height / 600)
+                    
+                    pdf_canvas.line(line_start_x, line_start_y, line_end_x, line_end_y)
+                
+                # Draw symbol based on type with new specifications
+                base_size = 26  # Scaled down from 35px frontend to PDF points
                 
                 if symbol_type == 'field_weld':
-                    # Rotated square (45 degrees) - smaller size
-                    size = symbol_size
-                    # Draw diamond by creating a rotated square
-                    points = [(x, y+size), (x+size, y), (x, y-size), (x-size, y)]
+                    # Diamond
+                    size = base_size * 0.8
+                    points = [(symbol_x, symbol_y+size), (symbol_x+size, symbol_y), 
+                             (symbol_x, symbol_y-size), (symbol_x-size, symbol_y)]
                     path = pdf_canvas.beginPath()
                     path.moveTo(points[0][0], points[0][1])
                     for point in points[1:]:
                         path.lineTo(point[0], point[1])
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
+                    
                 elif symbol_type == 'shop_weld':
-                    # Circle - smaller size
-                    pdf_canvas.circle(x, y, symbol_size, stroke=1, fill=0)
+                    # Circle
+                    radius = base_size * 0.35
+                    pdf_canvas.circle(symbol_x, symbol_y, radius, stroke=1, fill=0)
+                    
                 elif symbol_type == 'pipe_section':
-                    # Rounded rectangle - smaller size, stretched horizontally by 12%
-                    width = (symbol_size * 2.67) * 1.12  # Adjusted for smaller base size
-                    height = symbol_size * 1.07  # Adjusted height
-                    pdf_canvas.roundRect(x-width/2, y-height/2, width, height, 6, stroke=1, fill=0)
+                    # Blue rectangle with rounded corners - 40% wider, 50% of height
+                    width = base_size * 1.4
+                    height = base_size * 0.55
+                    pdf_canvas.roundRect(symbol_x-width/2, symbol_y-height/2, width, height, 
+                                       7, stroke=1, fill=0)  # 7pt radius for rounded corners
+                    
                 elif symbol_type == 'pipe_support':
-                    # Rectangle (not rounded) - smaller size, stretched horizontally by 12%
-                    width = (symbol_size * 2.67) * 1.12  # Adjusted for smaller base size
-                    height = symbol_size * 1.07  # Adjusted height
-                    pdf_canvas.rect(x-width/2, y-height/2, width, height, stroke=1, fill=0)
+                    # Red rectangle with sharp corners - 40% wider, 50% of height
+                    width = base_size * 1.4
+                    height = base_size * 0.55
+                    pdf_canvas.rect(symbol_x-width/2, symbol_y-height/2, width, height, 
+                                  stroke=1, fill=0)
+                    
                 elif symbol_type == 'flange_joint':
-                    # Rotated hexagon (total 180 degrees) - keeps original size (10% larger)
-                    size = base_size * 1.1  # Flange keeps original larger size
+                    # Hexagon with horizontal line inside - 10% larger
+                    hex_size = base_size * 0.77
                     hex_points = []
-                    # Create hexagon points and rotate by 180 degrees
-                    rotation = math.pi  # 180 degrees in radians
                     for i in range(6):
-                        angle = i * math.pi / 3 + rotation
-                        px = x + size * math.cos(angle)
-                        py = y + size * math.sin(angle)
+                        angle = i * math.pi / 3
+                        px = symbol_x + hex_size/2 * math.cos(angle)
+                        py = symbol_y + hex_size/2 * math.sin(angle)
                         hex_points.append((px, py))
                     
-                    # Draw hexagon using path
+                    # Draw hexagon outline
                     path = pdf_canvas.beginPath()
                     path.moveTo(hex_points[0][0], hex_points[0][1])
                     for point in hex_points[1:]:
@@ -216,9 +234,10 @@ async def export_pdf(project_data: dict):
                     path.close()
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
-                    # Horizontal line through center
-                    line_size = size * 0.8
-                    pdf_canvas.line(x-line_size, y, x+line_size, y)
+                    # Draw horizontal line inside hexagon
+                    line_length = hex_size/3
+                    pdf_canvas.line(symbol_x - line_length, symbol_y, 
+                                  symbol_x + line_length, symbol_y)
             
             # Add new page if not the last page
             if page_num < len(images) - 1:
