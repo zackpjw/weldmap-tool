@@ -161,7 +161,7 @@ async def export_pdf(project_data: dict):
                 # Handle both old format (x, y) and new format (symbolPosition, lineStart, lineEnd)
                 symbol_pos = annotation.get('symbolPosition') or {'x': annotation.get('x', 0), 'y': annotation.get('y', 0)}
                 
-                # Transform coordinates from frontend canvas to PDF
+                # Transform coordinates from frontend canvas to PDF - EXACT MATCH
                 symbol_x = symbol_pos['x'] * (page_width / 800)  # Scale from 800px canvas width
                 symbol_y = (600 - symbol_pos['y']) * (page_height / 600)  # Flip Y and scale from 600px canvas height
                 
@@ -173,7 +173,7 @@ async def export_pdf(project_data: dict):
                 pdf_canvas.setFillColorRGB(*color)
                 pdf_canvas.setLineWidth(2)
                 
-                # Draw line if it exists
+                # Draw line if it exists - EXACT coordinate transformation
                 if annotation.get('lineStart') and annotation.get('lineEnd'):
                     line_start_x = annotation['lineStart']['x'] * (page_width / 800)
                     line_start_y = (600 - annotation['lineStart']['y']) * (page_height / 600)
@@ -182,14 +182,15 @@ async def export_pdf(project_data: dict):
                     
                     pdf_canvas.line(line_start_x, line_start_y, line_end_x, line_end_y)
                 
-                # Draw symbol based on type with new specifications
-                base_size = 26  # Scaled down from 35px frontend to PDF points
+                # Draw symbol based on type - ALL SAME SIZE AS DIAMOND (uniformSize = 28 * 0.8 = 22.4)
+                base_size = 28  # Scaled from 35px frontend to PDF points
+                uniform_size = base_size * 0.8  # Same as diamond size (22.4)
                 
                 if symbol_type == 'field_weld':
-                    # Diamond
-                    size = base_size * 0.8
-                    points = [(symbol_x, symbol_y+size), (symbol_x+size, symbol_y), 
-                             (symbol_x, symbol_y-size), (symbol_x-size, symbol_y)]
+                    # Diamond - base size
+                    size = uniform_size * 0.8  # Inner diamond size
+                    points = [(symbol_x, symbol_y + size), (symbol_x + size, symbol_y), 
+                             (symbol_x, symbol_y - size), (symbol_x - size, symbol_y)]
                     path = pdf_canvas.beginPath()
                     path.moveTo(points[0][0], points[0][1])
                     for point in points[1:]:
@@ -198,32 +199,32 @@ async def export_pdf(project_data: dict):
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
                 elif symbol_type == 'shop_weld':
-                    # Circle
-                    radius = base_size * 0.35
+                    # Circle - same size as diamond
+                    radius = uniform_size * 0.35
                     pdf_canvas.circle(symbol_x, symbol_y, radius, stroke=1, fill=0)
                     
                 elif symbol_type == 'pipe_section':
-                    # Blue rectangle with rounded corners - 40% wider, 50% of height
-                    width = base_size * 1.4
-                    height = base_size * 0.55
+                    # Blue rectangle - based on diamond size, wider aspect
+                    width = uniform_size * 1.4  # Wider aspect
+                    height = uniform_size * 0.7  # Height based on diamond
                     pdf_canvas.roundRect(symbol_x-width/2, symbol_y-height/2, width, height, 
-                                       7, stroke=1, fill=0)  # 7pt radius for rounded corners
+                                       6, stroke=1, fill=0)  # 6pt radius for rounded corners
                     
                 elif symbol_type == 'pipe_support':
-                    # Red rectangle with sharp corners - 40% wider, 50% of height
-                    width = base_size * 1.4
-                    height = base_size * 0.55
+                    # Red rectangle - based on diamond size, wider aspect
+                    width = uniform_size * 1.4  # Wider aspect
+                    height = uniform_size * 0.7  # Height based on diamond
                     pdf_canvas.rect(symbol_x-width/2, symbol_y-height/2, width, height, 
                                   stroke=1, fill=0)
                     
                 elif symbol_type == 'flange_joint':
-                    # Hexagon with horizontal line inside - 10% larger
-                    hex_size = base_size * 0.77
+                    # Hexagon with horizontal line inside - same size as diamond
+                    hex_radius = uniform_size / 2 * 0.7  # Same proportions as frontend
                     hex_points = []
                     for i in range(6):
                         angle = i * math.pi / 3
-                        px = symbol_x + hex_size/2 * math.cos(angle)
-                        py = symbol_y + hex_size/2 * math.sin(angle)
+                        px = symbol_x + hex_radius * math.cos(angle)
+                        py = symbol_y + hex_radius * math.sin(angle)
                         hex_points.append((px, py))
                     
                     # Draw hexagon outline
@@ -235,7 +236,7 @@ async def export_pdf(project_data: dict):
                     pdf_canvas.drawPath(path, stroke=1, fill=0)
                     
                     # Draw horizontal line inside hexagon
-                    line_length = hex_size/3
+                    line_length = uniform_size / 4  # Same proportions as frontend
                     pdf_canvas.line(symbol_x - line_length, symbol_y, 
                                   symbol_x + line_length, symbol_y)
             
