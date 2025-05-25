@@ -188,7 +188,7 @@ function App() {
   };
 
   const handleCanvasClick = (event) => {
-    if (event.ctrlKey || event.metaKey) {
+    if (event.ctrlKey || event.metaKey || isPanning) {
       return; // Let panning handle this
     }
 
@@ -196,8 +196,12 @@ function App() {
 
     // Check if clicking on an existing symbol
     const clickedSymbol = currentPageSymbols.find(symbol => {
-      const distance = Math.sqrt(Math.pow(symbol.x - x, 2) + Math.pow(symbol.y - y, 2));
-      return distance < 30; // 30px click tolerance (increased for better click detection)
+      if (!symbol.symbolPosition) return false;
+      const distance = Math.sqrt(
+        Math.pow(symbol.symbolPosition.x - x, 2) + 
+        Math.pow(symbol.symbolPosition.y - y, 2)
+      );
+      return distance < 30; // 30px click tolerance
     });
 
     if (clickedSymbol) {
@@ -215,17 +219,78 @@ function App() {
       return;
     }
 
-    // Place new symbol only if NOT in drawing mode
-    const newSymbol = {
-      id: Date.now(),
-      type: selectedSymbolType,
-      x,
-      y,
-      page: currentPage
-    };
+    // Start line drawing
+    if (!isDrawingLine) {
+      setIsDrawingLine(true);
+      setLineStart({ x, y });
+      setCurrentLineEnd({ x, y });
+      setPreviewLine({ start: { x, y }, end: { x, y } });
+    }
+  };
 
-    setPlacedSymbols(prev => [...prev, newSymbol]);
-    setSelectedSymbolId(null);
+  // Handle mouse move for line drawing preview
+  const handleCanvasMouseMove = (event) => {
+    const { x, y } = getCanvasCoordinates(event);
+
+    // Handle panning
+    if (isPanning) {
+      const deltaX = x - lastPanPoint.x;
+      const deltaY = y - lastPanPoint.y;
+      
+      setPanOffset(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPanPoint({ x, y });
+      event.preventDefault();
+      return;
+    }
+
+    // Handle line drawing preview
+    if (isDrawingLine && lineStart) {
+      setCurrentLineEnd({ x, y });
+      setPreviewLine({ start: lineStart, end: { x, y } });
+    }
+  };
+
+  // Handle mouse up for completing line drawing
+  const handleCanvasMouseUp = (event) => {
+    if (isPanning) {
+      setIsPanning(false);
+      return;
+    }
+
+    if (isDrawingLine && lineStart) {
+      const { x, y } = getCanvasCoordinates(event);
+      
+      // Only create line if it's long enough (minimum 10px)
+      const lineLength = Math.sqrt(
+        Math.pow(x - lineStart.x, 2) + 
+        Math.pow(y - lineStart.y, 2)
+      );
+
+      if (lineLength > 10) {
+        // Create new annotation with line and symbol
+        const newAnnotation = {
+          id: Date.now(),
+          type: selectedSymbolType,
+          page: currentPage,
+          lineStart: lineStart,
+          lineEnd: { x, y },
+          symbolPosition: { x, y } // Symbol at end of line
+        };
+
+        setPlacedSymbols(prev => [...prev, newAnnotation]);
+      }
+
+      // Reset line drawing state
+      setIsDrawingLine(false);
+      setLineStart(null);
+      setCurrentLineEnd(null);
+      setPreviewLine(null);
+      setSelectedSymbolId(null);
+    }
   };
 
   // Panning functionality
