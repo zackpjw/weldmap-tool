@@ -882,7 +882,13 @@ function App() {
                             const blueHeight = uniformSize * 0.7; // Height based on diamond
                             const borderRadius = 8;
                             return (
-                              <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
+                              <svg width={blueWidth} height={blueHeight} className="absolute" style={{ 
+                                left: -blueWidth/2, 
+                                top: -blueHeight/2,
+                                margin: 0,
+                                padding: 0,
+                                border: 'none'
+                              }}>
                                 <rect
                                   x={strokeWidth/2}
                                   y={strokeWidth/2}
