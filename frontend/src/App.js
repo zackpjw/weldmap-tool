@@ -119,6 +119,43 @@ function App() {
     }
   };
 
+  // Drag and drop handlers for file upload
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/pdf') {
+        setSelectedFile(file);
+        setError(null);
+        setPdfImages([]);
+        setPlacedSymbols([]);
+      } else {
+        setError('Please drop a valid PDF file');
+      }
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       setError('Please select a PDF file first');
