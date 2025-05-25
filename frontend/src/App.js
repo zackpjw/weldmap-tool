@@ -1040,7 +1040,11 @@ function App() {
                           left: `${previewLine.end.x * zoomLevel + panOffset.x}px`,
                           top: `${previewLine.end.y * zoomLevel + panOffset.y}px`,
                           zIndex: 25,
-                          opacity: 0.7
+                          opacity: 0.7,
+                          margin: 0,
+                          padding: 0,
+                          border: 'none',
+                          boxSizing: 'border-box'
                         }}
                       >
                         {(() => {
