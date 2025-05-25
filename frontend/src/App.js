@@ -999,7 +999,11 @@ function App() {
                               left: `${scaledSymbolX}px`,
                               top: `${scaledSymbolY}px`,
                               zIndex: selectedSymbolId === annotation.id ? 10 : 5,
-                              filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
+                              filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))',
+                              margin: 0,
+                              padding: 0,
+                              border: 'none',
+                              boxSizing: 'border-box'
                             }}
                           >
                             {renderShape()}
