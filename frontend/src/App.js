@@ -593,20 +593,104 @@ function App() {
               </div>
             )}
           </div>
-        )}
+        ) : (
+            /* PDF Editor Interface */
+            <div className="flex-1 flex flex-col p-6">
+              {/* Symbol Palette - Above PDF Editor */}
+              <div className="bg-white rounded-xl shadow-lg p-4 mb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Weld Symbol Palette</h3>
+                  <div className="text-sm text-gray-600">
+                    Select a symbol type to place on the drawing
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(symbolTypes).map(([type, config]) => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedSymbolType(type)}
+                      className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
+                        selectedSymbolType === type
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <span className="text-2xl" style={{ color: config.color }}>
+                        {config.shape}
+                      </span>
+                      <div className="text-left">
+                        <p className="font-medium text-sm text-gray-800">{config.name}</p>
+                        <p className="text-xs text-gray-600">{config.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="mt-4 px-4 py-2 bg-gray-50 rounded-lg text-xs text-gray-600">
+                  💡 Instructions: 
+                  Click to select symbol • Click on drawing to place • Symbols can overlap • Click symbol to select • Delete/Backspace to remove
+                </div>
+              </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <div className="flex items-center">
-              <span className="text-red-600 text-xl mr-3">⚠️</span>
-              <p className="text-red-800 font-medium">{error}</p>
-            </div>
-          </div>
-        )}
+              {/* Main Editor Area - Full height workspace */}
+              <div className="flex space-x-4 flex-1 min-h-0">
+                {/* PDF Editor Canvas - Left Side */}
+                <div className="flex-1 bg-white rounded-xl shadow-lg flex flex-col">
+                  <div className="p-4 border-b border-gray-200 flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        PDF Editor
+                      </h3>
+                      {pdfImages.length > 1 && (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                            disabled={currentPage === 0}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+                          >
+                            Previous
+                          </button>
+                          <span className="text-sm text-gray-600">
+                            Page {currentPage + 1} of {pdfImages.length}
+                          </span>
+                          <button
+                            onClick={() => setCurrentPage(Math.min(pdfImages.length - 1, currentPage + 1))}
+                            disabled={currentPage === pdfImages.length - 1}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-        {/* Professional PDF Editor Layout */}
-        {pdfImages.length > 0 && (
+                  <div className="flex-1 p-4 overflow-hidden">
+                    <div 
+                      className="relative border border-gray-200 rounded-lg overflow-hidden bg-gray-50 pdf-editor-canvas h-full"
+                      onMouseEnter={handlePDFMouseEnter}
+                      onMouseLeave={handlePDFMouseLeave}
+                    >
+                      <canvas
+                        ref={canvasRef}
+                        width={800}
+                        height={600}
+                        className="w-full h-full object-contain"
+                        onClick={handleCanvasClick}
+                        onDragOver={handleCanvasDragOver}
+                        onDrop={handleCanvasDrop}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        style={{
+                          backgroundImage: pdfImages[currentPage] ? `url(data:image/png;base64,${pdfImages[currentPage]})` : 'none',
+                          backgroundSize: `${100 * zoomLevel}%`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
+                          cursor: isPanning ? 'grabbing' : isDrawingMode ? 'crosshair' : 'pointer'
+                        }}
+                      />
           <div className="space-y-4">
             {/* Top Toolbar - Symbol Palette */}
             <div className="bg-white rounded-xl shadow-lg p-4">
