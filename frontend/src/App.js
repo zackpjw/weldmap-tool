@@ -697,35 +697,92 @@ function App() {
                       }}
                     />
                     
-                    {/* Render placed symbols with zoom scaling and proper outlines */}
-                    {currentPageSymbols.map((symbol) => {
-                      const symbolConfig = symbolTypes[symbol.type];
-                      const scaledX = symbol.x * zoomLevel + panOffset.x;
-                      const scaledY = symbol.y * zoomLevel + panOffset.y;
+                    {/* Render placed annotations with lines and symbols */}
+                    {currentPageSymbols.map((annotation) => {
+                      const symbolConfig = symbolTypes[annotation.type];
+                      
+                      // Handle both old format (x, y) and new format (symbolPosition)
+                      const symbolPos = annotation.symbolPosition || { x: annotation.x, y: annotation.y };
+                      const scaledSymbolX = symbolPos.x * zoomLevel + panOffset.x;
+                      const scaledSymbolY = symbolPos.y * zoomLevel + panOffset.y;
                       const symbolSize = 29 * zoomLevel; // 20% larger than original 24px
                       
                       return (
-                        <div
-                          key={symbol.id}
-                          className={`absolute pointer-events-none select-none transition-all ${
-                            selectedSymbolId === symbol.id ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 rounded' : ''
-                          }`}
-                          style={{
-                            left: `${scaledX - 18}px`, // Adjusted for larger size
-                            top: `${scaledY - 18}px`,
-                            fontSize: `${symbolSize}px`,
-                            color: 'transparent',
-                            WebkitTextStroke: `2px ${symbolConfig.color}`, // Outline only
-                            textStroke: `2px ${symbolConfig.color}`,
-                            fontWeight: 'bold',
-                            zIndex: selectedSymbolId === symbol.id ? 10 : 5,
-                            filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
-                          }}
-                        >
-                          {symbolConfig.shape}
+                        <div key={annotation.id}>
+                          {/* Render line if it exists */}
+                          {annotation.lineStart && annotation.lineEnd && (
+                            <svg
+                              className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                              style={{ zIndex: 1 }}
+                            >
+                              <line
+                                x1={annotation.lineStart.x * zoomLevel + panOffset.x}
+                                y1={annotation.lineStart.y * zoomLevel + panOffset.y}
+                                x2={annotation.lineEnd.x * zoomLevel + panOffset.x}
+                                y2={annotation.lineEnd.y * zoomLevel + panOffset.y}
+                                stroke={symbolConfig.color}
+                                strokeWidth={2 * zoomLevel}
+                                className={selectedSymbolId === annotation.id ? 'opacity-100' : 'opacity-80'}
+                              />
+                            </svg>
+                          )}
+                          
+                          {/* Render symbol */}
+                          <div
+                            className={`absolute pointer-events-none select-none transition-all ${
+                              selectedSymbolId === annotation.id ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 rounded' : ''
+                            }`}
+                            style={{
+                              left: `${scaledSymbolX - 18}px`, // Adjusted for larger size
+                              top: `${scaledSymbolY - 18}px`,
+                              fontSize: `${symbolSize}px`,
+                              color: 'transparent',
+                              WebkitTextStroke: `2px ${symbolConfig.color}`, // Outline only
+                              textStroke: `2px ${symbolConfig.color}`,
+                              fontWeight: 'bold',
+                              zIndex: selectedSymbolId === annotation.id ? 10 : 5,
+                              filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
+                            }}
+                          >
+                            {symbolConfig.shape}
+                          </div>
                         </div>
                       );
                     })}
+
+                    {/* Render preview line while drawing */}
+                    {previewLine && (
+                      <svg
+                        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                        style={{ zIndex: 20 }}
+                      >
+                        <line
+                          x1={previewLine.start.x * zoomLevel + panOffset.x}
+                          y1={previewLine.start.y * zoomLevel + panOffset.y}
+                          x2={previewLine.end.x * zoomLevel + panOffset.x}
+                          y2={previewLine.end.y * zoomLevel + panOffset.y}
+                          stroke={symbolTypes[selectedSymbolType].color}
+                          strokeWidth={2 * zoomLevel}
+                          strokeDasharray="5,5"
+                          opacity="0.7"
+                        />
+                        
+                        {/* Preview symbol at end of line */}
+                        <text
+                          x={previewLine.end.x * zoomLevel + panOffset.x}
+                          y={previewLine.end.y * zoomLevel + panOffset.y}
+                          fontSize={29 * zoomLevel}
+                          fill="transparent"
+                          stroke={symbolTypes[selectedSymbolType].color}
+                          strokeWidth="2"
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          opacity="0.7"
+                        >
+                          {symbolTypes[selectedSymbolType].shape}
+                        </text>
+                      </svg>
+                    )}
                   </div>
                 </div>
 
