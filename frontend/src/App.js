@@ -908,7 +908,13 @@ function App() {
                             const redWidth = uniformSize * 1.4; // Wider aspect
                             const redHeight = uniformSize * 0.7; // Height based on diamond
                             return (
-                              <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
+                              <svg width={redWidth} height={redHeight} className="absolute" style={{ 
+                                left: -redWidth/2, 
+                                top: -redHeight/2,
+                                margin: 0,
+                                padding: 0,
+                                border: 'none'
+                              }}>
                                 <rect
                                   x={strokeWidth/2}
                                   y={strokeWidth/2}
