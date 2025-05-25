@@ -754,7 +754,108 @@ function App() {
                       const symbolPos = annotation.symbolPosition || { x: annotation.x, y: annotation.y };
                       const scaledSymbolX = symbolPos.x * zoomLevel + panOffset.x;
                       const scaledSymbolY = symbolPos.y * zoomLevel + panOffset.y;
-                      const symbolSize = 29 * zoomLevel; // 20% larger than original 24px
+                      const baseSize = 35 * zoomLevel; // 20% larger than previous 29px
+                      
+                      // Render shape based on type
+                      const renderShape = () => {
+                        const strokeWidth = 2 * zoomLevel;
+                        const isSelected = selectedSymbolId === annotation.id;
+                        
+                        switch (annotation.type) {
+                          case 'field_weld': // Diamond
+                            const diamondSize = baseSize * 0.8;
+                            return (
+                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                <polygon
+                                  points={`${baseSize/2},${(baseSize-diamondSize)/2} ${baseSize-(baseSize-diamondSize)/2},${baseSize/2} ${baseSize/2},${baseSize-(baseSize-diamondSize)/2} ${(baseSize-diamondSize)/2},${baseSize/2}`}
+                                  fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                              </svg>
+                            );
+                            
+                          case 'shop_weld': // Circle
+                            const radius = baseSize * 0.35;
+                            return (
+                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                <circle
+                                  cx={baseSize/2}
+                                  cy={baseSize/2}
+                                  r={radius}
+                                  fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                              </svg>
+                            );
+                            
+                          case 'pipe_section': // Blue rectangle with rounded corners
+                            const blueWidth = baseSize * 1.2; // 20% wider
+                            const blueHeight = baseSize * 1.1; // 10% taller
+                            const borderRadius = 10;
+                            return (
+                              <svg width={blueWidth} height={blueHeight} className="absolute" style={{ left: -blueWidth/2, top: -blueHeight/2 }}>
+                                <rect
+                                  x={strokeWidth/2}
+                                  y={strokeWidth/2}
+                                  width={blueWidth - strokeWidth}
+                                  height={blueHeight - strokeWidth}
+                                  rx={borderRadius}
+                                  ry={borderRadius}
+                                  fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                              </svg>
+                            );
+                            
+                          case 'pipe_support': // Red rectangle (sharp corners)
+                            const redWidth = baseSize * 1.2; // 20% wider
+                            const redHeight = baseSize * 1.1; // 10% taller
+                            return (
+                              <svg width={redWidth} height={redHeight} className="absolute" style={{ left: -redWidth/2, top: -redHeight/2 }}>
+                                <rect
+                                  x={strokeWidth/2}
+                                  y={strokeWidth/2}
+                                  width={redWidth - strokeWidth}
+                                  height={redHeight - strokeWidth}
+                                  fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                              </svg>
+                            );
+                            
+                          case 'flange_joint': // Hexagon
+                            const hexSize = baseSize * 0.7;
+                            const hexPoints = [];
+                            for (let i = 0; i < 6; i++) {
+                              const angle = (i * Math.PI) / 3;
+                              const x = baseSize/2 + hexSize/2 * Math.cos(angle);
+                              const y = baseSize/2 + hexSize/2 * Math.sin(angle);
+                              hexPoints.push(`${x},${y}`);
+                            }
+                            return (
+                              <svg width={baseSize} height={baseSize} className="absolute" style={{ left: -baseSize/2, top: -baseSize/2 }}>
+                                <polygon
+                                  points={hexPoints.join(' ')}
+                                  fill="none"
+                                  stroke={symbolConfig.color}
+                                  strokeWidth={strokeWidth}
+                                  className={isSelected ? 'opacity-100' : 'opacity-90'}
+                                />
+                              </svg>
+                            );
+                            
+                          default:
+                            return null;
+                        }
+                      };
                       
                       return (
                         <div key={annotation.id}>
@@ -782,18 +883,13 @@ function App() {
                               selectedSymbolId === annotation.id ? 'ring-2 ring-blue-500 ring-offset-2 bg-blue-50 rounded' : ''
                             }`}
                             style={{
-                              left: `${scaledSymbolX - 18}px`, // Adjusted for larger size
-                              top: `${scaledSymbolY - 18}px`,
-                              fontSize: `${symbolSize}px`,
-                              color: 'transparent',
-                              WebkitTextStroke: `2px ${symbolConfig.color}`, // Outline only
-                              textStroke: `2px ${symbolConfig.color}`,
-                              fontWeight: 'bold',
+                              left: `${scaledSymbolX}px`,
+                              top: `${scaledSymbolY}px`,
                               zIndex: selectedSymbolId === annotation.id ? 10 : 5,
                               filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))'
                             }}
                           >
-                            {symbolConfig.shape}
+                            {renderShape()}
                           </div>
                         </div>
                       );
